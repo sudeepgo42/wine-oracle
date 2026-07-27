@@ -468,6 +468,19 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   </div>
 </div>
 
+<!-- Magic link landed confirmation -->
+<div class="login-gate" id="magicLandedGate" style="display:none">
+  <div class="login-card">
+    <div class="seal"><span class="seal-text">SC</span></div>
+    <h1>You're <strong>Signed In</strong></h1>
+    <p>If Wine Oracle is already open in another tab, you can close this one. Otherwise, continue right here.</p>
+    <div class="login-form">
+      <button class="btn-primary" id="closeTabBtn" onclick="attemptCloseTab()">Close This Tab</button>
+      <button class="reset-btn" style="margin-top:4px" onclick="continueInThisTab()">Continue here instead →</button>
+    </div>
+  </div>
+</div>
+
 <!-- Logout -->
 <button class="logout-link" id="logoutLink" style="display:none" onclick="signOut()">Sign out</button>
 
@@ -699,18 +712,46 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   // --- Auth ---
   let currentUser = null;
 
+  function isMagicLinkRedirect() {
+    // Supabase puts auth tokens in the URL hash after a magic-link click
+    return window.location.hash.includes('access_token') || window.location.hash.includes('type=magiclink');
+  }
+
   function showLoggedIn() {
     document.getElementById('loginGate').style.display = 'none';
+    document.getElementById('magicLandedGate').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
     document.getElementById('logoutLink').style.display = 'block';
   }
 
   function showLoggedOut() {
     document.getElementById('loginGate').style.display = 'flex';
+    document.getElementById('magicLandedGate').style.display = 'none';
     document.getElementById('appWrap').style.display = 'none';
     document.getElementById('logoutLink').style.display = 'none';
     document.getElementById('loginSent').classList.remove('show');
     document.getElementById('loginForm').style.display = 'flex';
+  }
+
+  function showMagicLanded() {
+    document.getElementById('loginGate').style.display = 'none';
+    document.getElementById('magicLandedGate').style.display = 'flex';
+    document.getElementById('appWrap').style.display = 'none';
+    document.getElementById('logoutLink').style.display = 'none';
+  }
+
+  function attemptCloseTab() {
+    window.close();
+    // Most mobile browsers block window.close() on tabs not opened via script.
+    // If we're still here after a moment, fall back to letting them continue.
+    setTimeout(() => {
+      const btn = document.getElementById('closeTabBtn');
+      if (btn) btn.textContent = "Couldn't close automatically — use your browser's tab controls, or continue below";
+    }, 400);
+  }
+
+  function continueInThisTab() {
+    showLoggedIn();
   }
 
   async function sendMagicLink() {
@@ -764,10 +805,18 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
       return;
     }
 
+    const cameFromMagicLink = isMagicLinkRedirect();
+
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session && session.user) {
       currentUser = session.user;
-      showLoggedIn();
+      // Clean the auth tokens out of the URL so refreshing doesn't re-trigger this
+      if (cameFromMagicLink) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        showMagicLanded();
+      } else {
+        showLoggedIn();
+      }
     } else {
       showLoggedOut();
     }
@@ -775,7 +824,11 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     supabaseClient.auth.onAuthStateChange((event, session) => {
       if (session && session.user) {
         currentUser = session.user;
-        showLoggedIn();
+        if (event === 'SIGNED_IN' && cameFromMagicLink) {
+          showMagicLanded();
+        } else {
+          showLoggedIn();
+        }
       } else {
         currentUser = null;
         showLoggedOut();
