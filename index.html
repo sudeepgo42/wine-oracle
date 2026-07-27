@@ -1408,10 +1408,90 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     grid.appendChild(addMore);
   }
 
+  // --- Personalisation: pull taste profile + rating history into the prompt ---
+  async function buildPersonalContext() {
+    if (!supabaseClient || !currentUser) return { text: '', used: false };
+
+    let profileText = '';
+    let historyText = '';
+
+    try {
+      const { data: profile } = await supabaseClient
+        .from('taste_profile')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      if (profile && profile.onboarded) {
+        const redBits = [
+          profile.red_body && `body: ${profile.red_body}`,
+          profile.red_tannin && `tannin: ${profile.red_tannin}`,
+          profile.red_oak && `oak: ${profile.red_oak}`,
+          profile.red_grapes && `go-to grapes: ${profile.red_grapes}`,
+          profile.red_regions && `go-to regions: ${profile.red_regions}`,
+          profile.red_notes && `notes: ${profile.red_notes}`,
+        ].filter(Boolean).join(', ');
+
+        const whiteBits = [
+          profile.white_body && `body: ${profile.white_body}`,
+          profile.white_sweetness && `sweetness: ${profile.white_sweetness}`,
+          profile.white_oak && `oak: ${profile.white_oak}`,
+          profile.white_grapes && `go-to grapes: ${profile.white_grapes}`,
+          profile.white_regions && `go-to regions: ${profile.white_regions}`,
+          profile.white_notes && `notes: ${profile.white_notes}`,
+        ].filter(Boolean).join(', ');
+
+        const lines = [
+          redBits && `Red wine preferences — ${redBits}`,
+          whiteBits && `White wine preferences — ${whiteBits}`,
+          (profile.budget_low || profile.budget_high) && `Typical spend: $${profile.budget_low || '0'}–$${profile.budget_high || '?'}`,
+          profile.notes && `General notes: ${profile.notes}`,
+        ].filter(Boolean);
+
+        if (lines.length) {
+          profileText = `PERSONAL TASTE PROFILE (from their onboarding):\n${lines.join('\n')}`;
+        }
+      }
+    } catch (e) {
+      console.warn('[personal context] could not load taste profile', e);
+    }
+
+    try {
+      const { data: ratings } = await supabaseClient
+        .from('wine_ratings')
+        .select('wine_name, region, grape, style, rating')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(60);
+
+      if (ratings && ratings.length) {
+        const loved = ratings.filter(r => r.rating >= 4).slice(0, 10);
+        const disliked = ratings.filter(r => r.rating <= 2).slice(0, 10);
+
+        const fmt = r => `- ${r.wine_name}${r.region ? ' (' + r.region + ')' : ''}${r.grape ? ', ' + r.grape : ''} — rated ${r.rating}/5`;
+
+        const parts = [];
+        if (loved.length) parts.push(`WINES THEY'VE LOVED BEFORE:\n${loved.map(fmt).join('\n')}`);
+        if (disliked.length) parts.push(`WINES THAT DIDN'T WORK FOR THEM:\n${disliked.map(fmt).join('\n')}`);
+        if (parts.length) historyText = parts.join('\n\n');
+      }
+    } catch (e) {
+      console.warn('[personal context] could not load rating history', e);
+    }
+
+    const combined = [profileText, historyText].filter(Boolean).join('\n\n');
+    if (!combined) return { text: '', used: false };
+
+    const text = `\n\n${combined}\n\nUse the above to personalise your picks: favour wines that resemble what they've loved before (similar grape, region, body, or style), and be cautious about patterns matching what didn't work for them — even if it technically fits the stated budget or style filter. If you do recommend something outside their usual pattern, briefly note in "why" that it's a deliberate stretch and why it's still worth trying.`;
+
+    return { text, used: true };
+  }
+
   async function submitLabelScan() {
     if (labelImages.length === 0) return;
 
     const notes = document.getElementById('labelNotesInput').value.trim();
+    const personal = await buildPersonalContext();
 
     const fileBlocks = labelImages.map(item => ({
       type: 'image',
@@ -1424,7 +1504,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
         type: 'text',
         text: `The attached photo${labelImages.length > 1 ? 's show' : ' shows'} a wine label (front${labelImages.length > 1 ? ' and back' : ''}). Identify this specific wine as precisely as you can from the label.
 
-${notes ? `The person also asked: ${notes}` : ''}
+${notes ? `The person also asked: ${notes}` : ''}${personal.text}
 
 Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
 {
@@ -1436,7 +1516,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       "grape": "Primary grape variety or blend",
       "style": "Brief style descriptor",
       "description": "Two to three sentences on character, flavour profile, and typical drinking window",
-      "why": "${notes ? 'A direct answer to what was asked, or a serving/pairing suggestion if not fully answerable' : 'A serving or pairing suggestion for this wine'}"
+      "why": "${notes ? 'A direct answer to what was asked, or a serving/pairing suggestion if not fully answerable' : 'A serving or pairing suggestion for this wine'}${personal.used ? ', factoring in whether this matches their known taste profile and rating history' : ''}"
     }
   ],
   "confidence": 1,
@@ -1451,7 +1531,9 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
     document.getElementById('formSection').style.display = 'none';
     document.getElementById('errorBox').classList.remove('show');
     document.getElementById('loadingTitle').textContent = 'Give me a moment';
-    document.getElementById('loadingSub').textContent = 'Looking closely at the label.';
+    document.getElementById('loadingSub').textContent = personal.used
+      ? 'Looking closely at the label, and checking it against your taste.'
+      : 'Looking closely at the label.';
     document.getElementById('loading').classList.add('show');
     document.getElementById('results').classList.remove('show');
 
@@ -1483,6 +1565,7 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
         confidence: parsed.confidence,
         confidenceReason: parsed.confidence_reason,
         labelThumb: labelImages[0] ? labelImages[0].dataUrl : null,
+        personalized: personal.used,
       });
     } catch (e) {
       document.getElementById('loading').classList.remove('show');
@@ -1625,6 +1708,7 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
     const pairing = getSelectedPairing();
     const occasion = document.getElementById('occasionSelect').value;
     const notes = document.getElementById('notesInput').value.trim();
+    const personal = await buildPersonalContext();
 
     const prefs = [
       `Budget: up to $${budget} AUD per bottle`,
@@ -1655,7 +1739,7 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
         type: 'text',
         text: `The attached file${pageCount > 1 ? 's are' : ' is'} ${descriptor}. Based on the preferences below, recommend 3 to 5 specific wines from this list that best match.
 
-${prefs}
+${prefs}${personal.text}
 
 Many wine lists offer wines both by the glass and by the bottle. Prioritise full bottles at or under the stated budget. Only include a by-the-glass option if it is a genuinely excellent match worth calling out on its own merits — do not include a glass pour just to fill out the list. Whichever you recommend, set "serving" to "bottle" or "glass" accurately based on what is actually being recommended and at what price on the list.
 
@@ -1670,7 +1754,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       "grape": "Primary grape variety or blend",
       "style": "Brief style descriptor",
       "description": "Two to three sentences on character, flavour profile, and when to drink it",
-      "why": "One or two sentences of first-person reasoning for why this suits what was asked. Present tense, opinionated, no more than two sentences."
+      "why": "One or two sentences of first-person reasoning for why this suits what was asked. Present tense, opinionated, no more than two sentences.${personal.used ? ' If this pick connects to a wine they have loved before or fits their taste profile, say so briefly.' : ''}"
     }
   ],
   "sommelier_note": "One to two sentences of overall guidance or a pairing suggestion."
@@ -1681,7 +1765,9 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
     document.getElementById('formSection').style.display = 'none';
     document.getElementById('errorBox').classList.remove('show');
     document.getElementById('loadingTitle').textContent = 'Give me a moment';
-    document.getElementById('loadingSub').textContent = `Reading ${pageCount === 1 ? 'the list' : pageCount + ' pages'}, then thinking about what suits you.`;
+    document.getElementById('loadingSub').textContent = personal.used
+      ? `Reading ${pageCount === 1 ? 'the list' : pageCount + ' pages'}, then weighing it against what you've liked before.`
+      : `Reading ${pageCount === 1 ? 'the list' : pageCount + ' pages'}, then thinking about what suits you.`;
     document.getElementById('loading').classList.add('show');
     document.getElementById('results').classList.remove('show');
 
@@ -1711,6 +1797,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
         budgetLabel: `Budget up to $${budget}`,
         styleLabel: style,
         isLabelMode: false,
+        personalized: personal.used,
       });
     } catch (e) {
       document.getElementById('loading').classList.remove('show');
@@ -1732,8 +1819,9 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
     const metaParts = [];
     if (meta.budgetLabel) metaParts.push(meta.budgetLabel);
     if (meta.styleLabel && !meta.isLabelMode) metaParts.push(meta.styleLabel);
+    if (meta.personalized) metaParts.push('Personalised to your taste');
     document.getElementById('resultsMeta').textContent = meta.isLabelMode
-      ? 'Identified from your photo'
+      ? ['Identified from your photo', meta.personalized ? 'Personalised to your taste' : ''].filter(Boolean).join(' · ')
       : metaParts.join(' · ');
 
     const cards = document.getElementById('wineCards');
