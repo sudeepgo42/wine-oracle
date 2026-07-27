@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wine Oracle</title>
+<title>Gatsby's Wine Oracle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
@@ -27,7 +27,6 @@
   --border-hover: rgba(184,147,90,0.4);
   --radius: 3px;
   --radius-sm: 2px;
-  --serif: 'Fraunces', Georgia, serif;
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -53,54 +52,47 @@ body::after {
 }
 .wrap {
   position: relative; z-index: 1;
-  max-width: 760px; margin: 0 auto; padding: 56px 24px 80px;
+  max-width: 760px; margin: 0 auto; padding: 56px 24px 100px;
+}
+svg.icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
+
+/* Seal */
+.seal-wrap { display: flex; justify-content: center; margin-bottom: 18px; }
+.seal-wrap svg { filter: drop-shadow(0 4px 10px rgba(0,0,0,.55)); }
+.seal-flicker { animation: wo-flicker 1.6s ease-in-out infinite alternate; }
+@keyframes wo-flicker {
+  0% { opacity: .45; transform: scaleY(.94); }
+  100% { opacity: 1; transform: scaleY(1.04); }
 }
 
 /* Masthead */
-.masthead { text-align: center; margin-bottom: 52px; position: relative; }
-.seal {
-  width: 56px; height: 56px; margin: 0 auto 20px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, var(--brass-light), var(--brass) 55%, var(--brass-dim) 100%);
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.3);
-  position: relative;
+.masthead { text-align: center; margin-bottom: 48px; }
+.wordmark-eyebrow {
+  font-family: var(--sans); font-weight: 600; font-size: 12px;
+  letter-spacing: .28em; text-transform: uppercase; color: var(--brass);
+  margin-bottom: 6px;
 }
-.seal::before {
-  content: ''; position: absolute; inset: 4px; border-radius: 50%;
-  border: 1px dashed rgba(18,10,23,0.35);
+.wordmark {
+  font-family: var(--sans); font-weight: 600; font-size: clamp(1.9rem, 5vw, 2.25rem);
+  letter-spacing: -.035em; color: var(--champagne); line-height: 1.1;
+  margin-bottom: 10px;
 }
-.seal-text {
-  font-family: var(--serif); font-weight: 500; font-size: 15px;
-  color: #120a17; letter-spacing: 0.02em; font-style: italic;
+.wordmark em { font-style: normal; color: var(--brass-light); }
+.byline {
+  font-family: var(--sans); font-weight: 400; font-size: 12px;
+  color: var(--text-dim); margin-bottom: 18px;
 }
-.masthead-eyebrow {
-  display: inline-flex; align-items: center; gap: 10px;
-  font-family: var(--sans);
-  font-size: 10px; font-weight: 600; letter-spacing: 0.22em;
-  color: var(--brass); text-transform: uppercase; margin-bottom: 16px;
-}
-.masthead-eyebrow::before, .masthead-eyebrow::after {
-  content: ''; display: inline-block; width: 24px; height: 1px;
-  background: linear-gradient(to right, transparent, var(--brass-dim));
-}
-.masthead-eyebrow::after { background: linear-gradient(to left, transparent, var(--brass-dim)); }
-.masthead h1 {
-  font-family: var(--serif); font-optical-sizing: auto;
-  font-size: clamp(2.4rem, 6vw, 3.6rem); font-weight: 400; font-style: normal;
-  color: var(--champagne); line-height: 1.08; letter-spacing: -0.01em;
-  margin-bottom: 16px;
-}
-.masthead h1 strong { font-weight: 600; font-style: italic; color: var(--brass-light); }
 .masthead-sub {
-  font-family: var(--serif); font-style: italic; font-weight: 400;
-  font-size: 16px; color: var(--text-secondary); line-height: 1.6;
-  max-width: 440px; margin: 0 auto;
+  font-family: var(--sans); font-weight: 400; font-size: 15px;
+  color: var(--text-secondary); line-height: 1.6; max-width: 380px; margin: 0 auto;
 }
 
-/* Mode tabs */
+/* Nav row: mode tabs + kept bottles link */
+.nav-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+}
 .mode-tabs {
-  display: flex; gap: 4px; margin-bottom: 24px;
+  display: flex; gap: 4px; flex: 1;
   background: var(--bg-surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 4px;
 }
@@ -116,50 +108,71 @@ body::after {
   background: linear-gradient(180deg, var(--brass-light), var(--brass));
   color: #1d1220;
 }
+.kept-nav-link {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--sans); font-size: 11px; font-weight: 600;
+  color: var(--text-dim); background: var(--bg-surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 0 14px; height: 44px; cursor: pointer; white-space: nowrap;
+  transition: all 0.2s;
+}
+.kept-nav-link:hover { color: var(--brass-light); border-color: var(--border-hover); }
+
+/* Foil-edge panel */
+.panel {
+  background: linear-gradient(180deg, var(--bg-surface), var(--bg-card));
+  border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px; margin-bottom: 20px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 12px 30px -18px rgba(0,0,0,0.6);
+  position: relative; overflow: hidden;
+}
+.panel.foil::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(to right, transparent, var(--brass), var(--bordeaux-light), var(--brass), transparent);
+  opacity: 0.75;
+}
+.panel:hover { border-color: var(--border-hover); }
+.panel-title {
+  font-family: var(--sans); font-size: 9px; font-weight: 600; letter-spacing: 0.2em;
+  color: var(--brass); text-transform: uppercase; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.panel-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, var(--border), transparent); }
+
+/* Screen header bar (small seal + title) */
+.screen-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 22px;
+}
+.screen-header .screen-title {
+  font-family: var(--sans); font-weight: 500; font-size: 15px;
+  letter-spacing: -.01em; color: var(--text-primary);
+}
 
 /* Photo instruction callout */
 .photo-callout {
   display: flex; gap: 14px; align-items: flex-start;
   background: linear-gradient(135deg, rgba(184,147,90,0.09), rgba(110,31,48,0.06));
   border: 1px solid rgba(184,147,90,0.22);
-  border-radius: var(--radius); padding: 18px 20px; margin-bottom: 20px;
+  border-radius: var(--radius); padding: 16px 18px; margin-bottom: 20px;
 }
-.photo-callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; filter: sepia(0.3) saturate(1.5); }
+.photo-callout-icon { flex-shrink: 0; margin-top: 1px; color: var(--brass-light); }
 .photo-callout-text { flex: 1; }
-.photo-callout-title { font-family: var(--serif); font-style: italic; font-size: 15px; font-weight: 500; color: var(--brass-light); margin-bottom: 5px; }
-.photo-callout-body { font-size: 12px; color: var(--text-secondary); line-height: 1.65; }
-.photo-callout-body strong { color: var(--text-primary); font-weight: 500; }
-
-/* Panel */
-.panel {
-  background: linear-gradient(180deg, var(--bg-surface), var(--bg-card));
-  border: 1px solid var(--border);
-  border-top: 1px solid rgba(184,147,90,0.3);
-  border-radius: var(--radius); padding: 30px 28px; margin-bottom: 20px;
-  transition: border-color 0.25s, box-shadow 0.25s;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 12px 30px -18px rgba(0,0,0,0.6);
-}
-.panel:hover { border-color: var(--border-hover); }
-.panel-title {
-  font-family: var(--sans);
-  font-size: 10px; font-weight: 600; letter-spacing: 0.18em;
-  color: var(--brass); text-transform: uppercase; margin-bottom: 22px;
-  display: flex; align-items: center; gap: 10px;
-}
-.panel-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, var(--border), transparent); }
+.photo-callout-title { font-size: 13px; font-weight: 600; color: var(--brass-light); margin-bottom: 4px; }
+.photo-callout-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
 
 /* Upload zone */
 .upload-zone {
   border: 1.5px dashed var(--brass-dim); border-radius: var(--radius);
-  padding: 44px 24px; text-align: center; cursor: pointer;
+  padding: 40px 24px; text-align: center; cursor: pointer;
   transition: all 0.25s; background: rgba(184,147,90,0.02);
 }
 .upload-zone:hover, .upload-zone.drag {
   border-color: var(--brass); background: rgba(184,147,90,0.06);
 }
 .upload-zone input[type=file] { display: none; }
-.upload-icon { font-size: 26px; display: block; margin-bottom: 12px; opacity: 0.9; }
-.upload-label { font-family: var(--serif); font-style: italic; font-size: 16px; font-weight: 400; color: var(--text-primary); margin-bottom: 5px; }
+.upload-zone .icon { margin-bottom: 10px; color: var(--brass-light); }
+.upload-label { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
 .upload-sub { font-size: 12px; color: var(--text-dim); }
 .upload-sub strong { color: var(--brass-light); font-weight: 500; }
 
@@ -176,13 +189,13 @@ body::after {
 .image-thumb.pdf-thumb {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 8px; background: linear-gradient(135deg, rgba(184,147,90,0.1), rgba(110,31,48,0.08));
+  color: var(--brass-light);
 }
-.pdf-icon { font-size: 28px; }
 .pdf-thumb-label { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; color: var(--brass); text-transform: uppercase; }
 .image-thumb-remove {
   position: absolute; top: 5px; right: 5px;
   width: 22px; height: 22px; border-radius: 50%;
-  background: rgba(10,6,18,0.88); border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(18,10,23,0.88); border: 1px solid rgba(255,255,255,0.12);
   color: var(--text-secondary); font-size: 15px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all 0.2s;
@@ -209,9 +222,22 @@ body::after {
 }
 .page-count-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brass); display: inline-block; flex-shrink: 0; }
 
+/* Chip pickers */
+.chip-group-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+.chip {
+  font-family: var(--sans); font-size: 11px; font-weight: 500;
+  padding: 0 12px; min-height: 44px; display: flex; align-items: center;
+  border-radius: 2px; border: 1px solid rgba(184,147,90,0.18);
+  background: transparent; color: var(--text-secondary); cursor: pointer;
+  transition: all 0.15s;
+}
+.chip:hover { border-color: var(--border-hover); }
+.chip.active {
+  border-color: var(--brass); background: rgba(184,147,90,0.14); color: var(--brass-light);
+}
+
 /* Form */
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; }
 .form-control {
@@ -223,17 +249,11 @@ body::after {
   -webkit-appearance: none; appearance: none;
 }
 .form-control:focus { border-color: var(--brass); box-shadow: 0 0 0 3px rgba(184,147,90,0.12); }
-select.form-control {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23665a70'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 12px center;
-  background-color: var(--bg-deep); padding-right: 32px; cursor: pointer;
-}
-select.form-control option { background: var(--bg-card); }
 textarea.form-control { resize: vertical; min-height: 72px; line-height: 1.55; }
 
 /* Budget */
 .budget-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.budget-value { font-family: var(--serif); font-size: 2.2rem; font-weight: 500; font-style: italic; color: var(--brass-light); letter-spacing: -0.01em; }
+.budget-value { font-family: var(--sans); font-size: 2rem; font-weight: 600; color: var(--brass-light); letter-spacing: -.02em; }
 .budget-hint { font-size: 11px; color: var(--text-dim); }
 .budget-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-top: 5px; }
 input[type=range] {
@@ -248,13 +268,18 @@ input[type=range]::-webkit-slider-thumb {
 }
 input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
-/* Button */
+/* Sticky CTA footer */
+.sticky-cta {
+  position: sticky; bottom: 0; padding-top: 14px; margin-top: 4px;
+  background: linear-gradient(to top, var(--bg-deep) 60%, transparent);
+  z-index: 3;
+}
 .btn-primary {
   width: 100%; padding: 16px 20px;
   background: linear-gradient(180deg, var(--brass-light), var(--brass));
   border: none; border-radius: var(--radius);
   color: #1d1220; font-family: var(--sans);
-  font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
   cursor: pointer; transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
   box-shadow: 0 8px 20px -8px rgba(184,147,90,0.5);
 }
@@ -263,16 +288,17 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* Loading */
-.loading { display: none; text-align: center; padding: 72px 24px; }
+.loading { display: none; text-align: center; padding: 56px 24px; }
 .loading.show { display: block; }
-.flame { font-size: 32px; display: inline-block; animation: flicker 1.4s ease-in-out infinite alternate; margin-bottom: 16px; }
-@keyframes flicker {
-  0% { transform: scale(1) rotate(-1deg); opacity: 0.8; }
-  60% { transform: scale(1.08) rotate(0.5deg); opacity: 1; }
-  100% { transform: scale(0.96) rotate(-0.5deg); opacity: 0.85; }
+.loading-title { font-family: var(--sans); font-weight: 500; font-size: 17px; color: var(--text-primary); margin-bottom: 6px; }
+.loading-sub { font-size: 13px; color: var(--text-secondary); max-width: 340px; margin: 0 auto; }
+.progress-rule { position: relative; height: 1px; background: var(--border); margin: 24px auto 0; max-width: 240px; overflow: hidden; }
+.progress-rule::after {
+  content: ''; position: absolute; top: 0; left: -30%; width: 30%; height: 100%;
+  background: linear-gradient(to right, transparent, var(--brass-light), transparent);
+  animation: travel 1.8s ease-in-out infinite;
 }
-.loading-title { font-family: var(--serif); font-style: italic; font-size: 18px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px; }
-.loading-sub { font-size: 13px; color: var(--text-secondary); }
+@keyframes travel { 0% { left: -30%; } 100% { left: 100%; } }
 
 /* Error */
 .error-box {
@@ -286,69 +312,69 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 .results { display: none; }
 .results.show { display: block; animation: fadeUp 0.5s ease both; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-.results-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; color: var(--brass); text-transform: uppercase; margin-bottom: 10px; }
-.results-h2 { font-family: var(--serif); font-size: 1.9rem; font-weight: 400; font-style: italic; color: var(--champagne); letter-spacing: -0.01em; margin-bottom: 6px; }
-.results-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; }
+.results-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; color: var(--brass); text-transform: uppercase; margin-bottom: 8px; }
+.results-h2 { font-family: var(--sans); font-size: 1.5rem; font-weight: 600; color: var(--champagne); letter-spacing: -0.015em; margin-bottom: 6px; }
+.results-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 26px; }
 
 /* Wine card */
 .wine-card {
   background: linear-gradient(180deg, var(--bg-surface), var(--bg-card));
   border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 26px 28px; margin-bottom: 16px;
+  border-radius: var(--radius); padding: 24px 26px; margin-bottom: 14px;
   position: relative; transition: all 0.25s; animation: fadeUp 0.4s ease both;
   overflow: hidden;
 }
 .wine-card::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
   background: linear-gradient(to right, transparent, var(--brass), var(--bordeaux-light), var(--brass), transparent);
-  opacity: 0.7;
+  opacity: 0.55;
 }
-.wine-card:hover { border-color: var(--border-hover); transform: translateX(2px); box-shadow: 0 16px 40px -24px rgba(0,0,0,0.7); }
+.wine-card:hover { border-color: var(--border-hover); box-shadow: 0 16px 40px -24px rgba(0,0,0,0.7); }
+.wine-card.hero {
+  padding: 30px 30px 26px; border-color: rgba(184,147,90,0.4);
+}
+.wine-card.hero::before { height: 3px; opacity: 0.9; }
+.hero-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.18em; color: var(--brass);
+  text-transform: uppercase; margin-bottom: 10px;
+}
 .wine-num {
-  position: absolute; top: 18px; right: 22px;
-  font-family: var(--serif); font-size: 2.6rem; font-weight: 400; font-style: italic;
-  color: rgba(184,147,90,0.1);
-  line-height: 1; pointer-events: none; letter-spacing: -0.02em;
+  position: absolute; top: 16px; right: 20px;
+  font-family: var(--sans); font-size: 2.2rem; font-weight: 700;
+  color: rgba(184,147,90,0.09); line-height: 1; pointer-events: none; letter-spacing: -.03em;
 }
-.wine-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
-.wine-name { font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--champagne); line-height: 1.3; }
-.wine-price { font-family: var(--serif); font-size: 17px; font-style: italic; font-weight: 400; color: var(--brass-light); white-space: nowrap; flex-shrink: 0; }
-.wine-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.wine-card.hero .wine-num { font-size: 3.1rem; opacity: 0.09; top: 20px; }
+.wine-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 8px; }
+.wine-name { font-family: var(--sans); font-size: 16px; font-weight: 500; letter-spacing: -.02em; color: var(--text-primary); line-height: 1.25; }
+.wine-card.hero .wine-name { font-size: 21px; }
+.wine-price { font-family: var(--sans); font-size: 15px; font-weight: 500; color: var(--brass-light); white-space: nowrap; flex-shrink: 0; }
+.wine-card.hero .wine-price { font-size: 17px; }
+.wine-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
 .tag {
   font-size: 10px; font-weight: 500; letter-spacing: 0.08em;
   color: var(--brass); background: rgba(184,147,90,0.09);
   border: 1px solid rgba(184,147,90,0.18); border-radius: var(--radius-sm);
   padding: 3px 9px; text-transform: uppercase;
 }
-.wine-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.75; margin-bottom: 12px; }
-.wine-why { padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); font-style: italic; }
-.wine-why strong { color: var(--brass); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; font-style: normal; }
+.wine-why { font-size: 13px; line-height: 1.75; color: var(--text-primary); margin-bottom: 10px; }
+.wine-card.hero .wine-why { font-size: 14px; }
+.wine-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 6px; }
+.wine-card:not(.hero) .wine-desc {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 
-/* Rating */
-.wine-rate {
-  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+/* Label hero: thumbnail + confidence meter */
+.label-hero-top { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 4px; }
+.label-thumb {
+  width: 72px; height: 96px; border-radius: var(--radius-sm); object-fit: cover; flex-shrink: 0;
+  border: 1px solid var(--border);
 }
-.wine-rate-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: var(--text-dim); text-transform: uppercase; }
-.stars { display: flex; gap: 4px; }
-.star {
-  font-size: 20px; color: var(--border); cursor: pointer;
-  transition: color 0.15s, transform 0.1s; line-height: 1; background: none; border: none; padding: 0;
-}
-.star:hover { transform: scale(1.15); }
-.star.filled { color: var(--brass); }
-.wine-rate-saved {
-  font-size: 11px; color: var(--brass-light); display: none; align-items: center; gap: 5px;
-}
-.wine-rate-saved.show { display: flex; }
-.prior-rating {
-  margin-top: 10px; padding: 9px 12px; background: rgba(184,147,90,0.06);
-  border-radius: var(--radius-sm); font-size: 11px; color: var(--text-secondary);
-  display: flex; align-items: center; gap: 6px; font-style: italic;
-}
-.prior-rating .stars-mini { display: inline-flex; gap: 1px; }
-.prior-rating .star-mini { font-size: 11px; color: var(--brass); }
-.prior-rating .star-mini.empty { color: var(--border); }
+.confidence-meter { display: flex; align-items: center; gap: 10px; margin: 6px 0 16px; }
+.conf-bars { display: flex; gap: 3px; }
+.conf-bar { width: 5px; height: 12px; border-radius: 1px; background: rgba(184,147,90,0.22); }
+.conf-bar.filled { background: var(--brass-light); }
+.conf-word { font-size: 11px; font-weight: 600; color: var(--brass-light); }
+.conf-reason { font-size: 11px; color: var(--text-dim); }
 
 /* Critic notes */
 .critic-note {
@@ -359,10 +385,9 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 .critic-note-label {
   font-size: 9px; font-weight: 600; letter-spacing: 0.14em;
   color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;
-  display: flex; align-items: center; gap: 6px;
 }
 .critic-note-loading {
-  font-size: 12px; color: var(--text-dim); font-style: italic;
+  font-size: 12px; color: var(--text-dim); font-style: normal;
   display: flex; align-items: center; gap: 8px;
 }
 .critic-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--brass); animation: pulse-dot 1.2s ease-in-out infinite; }
@@ -373,35 +398,80 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
 }
 .critic-note-source:hover { color: var(--brass-light); }
-.critic-note-empty { font-size: 12px; color: var(--text-dim); font-style: italic; }
+.critic-note-empty { font-size: 12px; color: var(--text-dim); }
+
+/* Prior rating */
+.prior-rating {
+  margin-top: 10px; padding: 9px 12px; background: rgba(184,147,90,0.06);
+  border-radius: var(--radius-sm); font-size: 11px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 6px;
+}
+.prior-rating .stars-mini { display: inline-flex; gap: 1px; }
+.prior-rating .star-mini { font-size: 11px; color: var(--brass); }
+.prior-rating .star-mini.empty { color: var(--border); }
+
+/* Action row: Keep · Share · Stars */
+.action-row {
+  margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.icon-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; color: var(--text-dim);
+  font-family: var(--sans); font-size: 11px; font-weight: 500;
+  cursor: pointer; padding: 6px 4px; transition: color 0.15s;
+}
+.icon-btn:hover { color: var(--brass-light); }
+.icon-btn.kept { color: var(--brass-light); }
+.action-divider { width: 1px; height: 18px; background: var(--border); }
+.stars { display: flex; gap: 4px; }
+.star {
+  font-size: 19px; color: var(--border); cursor: pointer;
+  transition: color 0.15s, transform 0.1s; line-height: 1; background: none; border: none; padding: 0;
+}
+.star:hover { transform: scale(1.15); }
+.star.filled { color: var(--brass); }
+.wine-rate-saved {
+  font-size: 11px; color: var(--brass-light); display: none; align-items: center; gap: 5px;
+  margin-left: auto;
+}
+.wine-rate-saved.show { display: flex; }
 
 /* Sommelier note */
 .sommelier-note {
-  margin-top: 26px; padding: 22px 26px;
+  margin-top: 24px; padding: 20px 24px;
   border-left: 2px solid var(--brass);
   background: linear-gradient(135deg, rgba(184,147,90,0.06), rgba(110,31,48,0.04));
   border-radius: 0 var(--radius) var(--radius) 0;
 }
 .sommelier-note-label { font-size: 10px; font-weight: 600; letter-spacing: 0.16em; color: var(--brass); text-transform: uppercase; margin-bottom: 10px; }
-.sommelier-note p { font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--text-secondary); line-height: 1.8; }
+.sommelier-note p { font-size: 13px; color: var(--text-secondary); line-height: 1.75; }
 
-/* Reset */
+/* Reset / back links */
 .reset-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 26px; font-size: 12px; font-weight: 500;
+  margin-top: 24px; font-size: 12px; font-weight: 500;
   color: var(--text-dim); cursor: pointer; background: none; border: none;
   transition: color 0.2s; letter-spacing: 0.03em;
 }
 .reset-btn:hover { color: var(--brass-light); }
 
-/* Footer */
-.footer {
-  text-align: center; margin-top: 64px; padding-top: 26px;
-  border-top: 1px solid var(--border);
-  font-family: var(--serif); font-style: italic; font-weight: 400;
-  font-size: 12px; letter-spacing: 0.03em;
-  color: var(--text-dim);
+/* Kept bottles screen */
+.kept-screen { display: none; }
+.kept-screen.show { display: block; animation: fadeUp 0.4s ease both; }
+.kept-card {
+  background: linear-gradient(180deg, var(--bg-surface), var(--bg-card));
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 18px 20px; margin-bottom: 12px;
 }
+.kept-card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.kept-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+.kept-stars { display: flex; gap: 2px; }
+.kept-star { font-size: 13px; color: var(--brass); }
+.kept-star.empty { color: var(--border); }
+.kept-meta { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
+.kept-notes { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+.kept-empty { text-align: center; padding: 48px 24px; color: var(--text-dim); font-size: 13px; }
 
 /* Login gate */
 .login-gate {
@@ -411,16 +481,15 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 .login-card {
   max-width: 380px; width: 100%; text-align: center;
   background: linear-gradient(180deg, var(--bg-surface), var(--bg-card));
-  border: 1px solid var(--border); border-top: 1px solid rgba(184,147,90,0.3);
-  border-radius: var(--radius); padding: 40px 32px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 40px 32px;
   box-shadow: 0 20px 50px -24px rgba(0,0,0,0.7);
 }
-.login-card .seal { margin-bottom: 18px; }
 .login-card h1 {
-  font-family: var(--serif); font-size: 1.8rem; font-weight: 400;
-  color: var(--champagne); margin-bottom: 8px;
+  font-family: var(--sans); font-size: 1.6rem; font-weight: 600;
+  color: var(--champagne); margin-bottom: 8px; letter-spacing: -.02em;
 }
-.login-card h1 strong { font-weight: 600; font-style: italic; color: var(--brass-light); }
+.login-card h1 em { font-style: normal; color: var(--brass-light); }
 .login-card p {
   font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.6;
 }
@@ -434,7 +503,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 .login-input:focus { border-color: var(--brass); }
 .login-sent {
   display: none; font-size: 13px; color: var(--brass-light);
-  font-family: var(--serif); font-style: italic; line-height: 1.6;
+  line-height: 1.6;
 }
 .login-sent.show { display: block; }
 .login-error {
@@ -449,6 +518,14 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   padding: 6px 12px; cursor: pointer; transition: all 0.2s;
 }
 .logout-link:hover { color: var(--brass-light); border-color: var(--border-hover); }
+
+/* Footer */
+.footer {
+  text-align: center; margin-top: 60px; padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 11px; letter-spacing: 0.03em;
+  color: var(--text-dim);
+}
 </style>
 </head>
 <body>
@@ -456,26 +533,37 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 <!-- Login Gate -->
 <div class="login-gate" id="loginGate">
   <div class="login-card">
-    <div class="seal"><span class="seal-text">SC</span></div>
-    <h1>Wine <strong>Oracle</strong></h1>
+    <div class="seal-wrap">
+      <svg viewBox="0 0 100 100" width="70" height="70" role="img" aria-label="Gatsby's Wine Oracle seal">
+        <defs><radialGradient id="brassA" cx="34%" cy="28%"><stop offset="0%" stop-color="#f0d6a4"/><stop offset="52%" stop-color="#b8935a"/><stop offset="100%" stop-color="#6e5333"/></radialGradient><path id="arcA" d="M50,50 m0,-36 a36,36 0 1,1 -0.01,0" fill="none"/></defs>
+        <circle cx="50" cy="50" r="48" fill="url(#brassA)"/>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(18,10,23,.4)" stroke-width="1" stroke-dasharray="2.6 3.2"/>
+        <text fill="rgba(18,10,23,.62)" font-size="7.4" letter-spacing="2.3" font-family="Inter, sans-serif" font-weight="700"><textPath href="#arcA" startOffset="25%" text-anchor="middle">GATSBY'S WINE ORACLE</textPath></text>
+        <text fill="rgba(18,10,23,.45)" font-size="6" letter-spacing="2" font-family="Inter, sans-serif" font-weight="600"><textPath href="#arcA" startOffset="75%" text-anchor="middle">S. L. COOPER</textPath></text>
+        <text x="50" y="61" text-anchor="middle" fill="#120a17" stroke="#120a17" stroke-width=".7" stroke-linejoin="round" font-family="'Great Vibes', cursive" font-weight="400" font-size="35">SLC</text>
+      </svg>
+    </div>
+    <h1>Gatsby's <em>Wine Oracle</em></h1>
     <p>Enter your email and we'll send a link to sign in — no password needed.</p>
     <div class="login-form" id="loginForm">
       <input type="email" class="login-input" id="loginEmail" placeholder="you@example.com" autocomplete="email">
       <button class="btn-primary" id="loginBtn" onclick="sendMagicLink()">Send Magic Link</button>
       <div class="login-error" id="loginError"></div>
     </div>
-    <div class="login-sent" id="loginSent">Check your email and tap the link. This tab will sign in on its own once you do — no need to come back to your inbox tab afterwards.</div>
+    <div class="login-sent" id="loginSent">Check your email and tap the link. This tab will sign in on its own once you do.</div>
   </div>
 </div>
 
 <!-- Magic link landed confirmation -->
 <div class="login-gate" id="magicLandedGate" style="display:none">
   <div class="login-card">
-    <div class="seal"><span class="seal-text">SC</span></div>
-    <h1>You're <strong>Signed In</strong></h1>
-    <p>If Wine Oracle is already open in another tab, you can close this one. Otherwise, continue right here.</p>
+    <div class="seal-wrap">
+      <svg viewBox="0 0 100 100" width="70" height="70"><defs><radialGradient id="brassB" cx="34%" cy="28%"><stop offset="0%" stop-color="#f0d6a4"/><stop offset="52%" stop-color="#b8935a"/><stop offset="100%" stop-color="#6e5333"/></radialGradient></defs><circle cx="50" cy="50" r="48" fill="url(#brassB)"/><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(18,10,23,.4)" stroke-width="1" stroke-dasharray="2.6 3.2"/><text x="50" y="61" text-anchor="middle" fill="#120a17" stroke="#120a17" stroke-width=".7" stroke-linejoin="round" font-family="'Great Vibes', cursive" font-size="35">SLC</text></svg>
+    </div>
+    <h1>You're <em>Signed In</em></h1>
+    <p>If Gatsby's Wine Oracle is already open in another tab, that one should sign in on its own. Otherwise, continue right here.</p>
     <div class="login-form">
-      <p style="font-size:12px; color:var(--text-dim); margin-bottom:16px; margin-top:-8px;">This tab isn't needed anymore — your original tab should sign in on its own. Feel free to close this one manually, or continue right here.</p>
+      <p style="font-size:12px; color:var(--text-dim); margin-bottom:16px; margin-top:-8px;">This tab isn't needed anymore — feel free to close it, or continue here.</p>
       <button class="btn-primary" onclick="continueInThisTab()">Continue Here Instead</button>
     </div>
   </div>
@@ -488,39 +576,54 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
   <!-- Masthead -->
   <header class="masthead">
-    <div class="seal"><span class="seal-text">SC</span></div>
-    <div class="masthead-eyebrow">Shamus Cooper's</div>
-    <h1>Wine <strong>Oracle</strong></h1>
-    <p class="masthead-sub">Just like having Shamus with you to pick the perfect wine.</p>
+    <div class="seal-wrap">
+      <svg viewBox="0 0 100 100" width="82" height="82" role="img" aria-label="Gatsby's Wine Oracle seal">
+        <defs><radialGradient id="brassC" cx="34%" cy="28%"><stop offset="0%" stop-color="#f0d6a4"/><stop offset="52%" stop-color="#b8935a"/><stop offset="100%" stop-color="#6e5333"/></radialGradient><path id="arcC" d="M50,50 m0,-36 a36,36 0 1,1 -0.01,0" fill="none"/></defs>
+        <circle cx="50" cy="50" r="48" fill="url(#brassC)"/>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(18,10,23,.4)" stroke-width="1" stroke-dasharray="2.6 3.2"/>
+        <text fill="rgba(18,10,23,.62)" font-size="7.4" letter-spacing="2.3" font-family="Inter, sans-serif" font-weight="700"><textPath href="#arcC" startOffset="25%" text-anchor="middle">GATSBY'S WINE ORACLE</textPath></text>
+        <text fill="rgba(18,10,23,.45)" font-size="6" letter-spacing="2" font-family="Inter, sans-serif" font-weight="600"><textPath href="#arcC" startOffset="75%" text-anchor="middle">S. L. COOPER</textPath></text>
+        <text x="50" y="61" text-anchor="middle" fill="#120a17" stroke="#120a17" stroke-width=".7" stroke-linejoin="round" font-family="'Great Vibes', cursive" font-weight="400" font-size="35">SLC</text>
+      </svg>
+    </div>
+    <div class="wordmark-eyebrow">Gatsby's</div>
+    <h1 class="wordmark">Wine <em>Oracle</em></h1>
+    <div class="byline">Curated by Shamus Cooper</div>
+    <p class="masthead-sub">Hand me the list.<br>I'll tell you what to drink.</p>
   </header>
+
+  <!-- Nav row -->
+  <div class="nav-row">
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tabList" onclick="switchMode('list')">Wine list</button>
+      <button class="mode-tab" id="tabLabel" onclick="switchMode('label')">Read a label</button>
+    </div>
+    <button class="kept-nav-link" onclick="showKeptBottles()">
+      <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>
+      Kept
+    </button>
+  </div>
 
   <!-- Form -->
   <div id="formSection">
     <div class="error-box" id="errorBox"></div>
 
-    <div class="mode-tabs">
-      <button class="mode-tab active" id="tabList" onclick="switchMode('list')">Wine List</button>
-      <button class="mode-tab" id="tabLabel" onclick="switchMode('label')">Scan a Label</button>
-    </div>
-
     <!-- LIST MODE -->
     <div id="modeListPanels">
-      <div class="panel">
-        <div class="panel-title">Wine List</div>
+      <div class="panel foil">
+        <div class="panel-title">The Wine List</div>
 
         <div class="photo-callout">
-          <div class="photo-callout-icon">🍷</div>
+          <svg class="icon photo-callout-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v4h4"/><path d="M8 12h8"/><path d="M8 16h5"/></svg>
           <div class="photo-callout-text">
-            <div class="photo-callout-title">Photo or PDF, whichever is easiest</div>
-            <div class="photo-callout-body">
-              Upload a PDF of the wine list, or photograph each page with your phone camera. Add as many pages as you need.
-            </div>
+            <div class="photo-callout-title">However it's easiest</div>
+            <div class="photo-callout-body">A PDF, or photograph each page. Blurry corners are fine — I've read worse.</div>
           </div>
         </div>
 
         <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
           <input type="file" id="fileInput" accept=".pdf,image/*" multiple>
-          <span class="upload-icon">🍷</span>
+          <svg class="icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v4h4"/><path d="M8 12h8"/><path d="M8 16h5"/></svg>
           <div class="upload-label">Drop the wine list here, or click to browse</div>
           <div class="upload-sub">PDF, JPG or PNG &nbsp;·&nbsp; Multiple pages welcome</div>
         </div>
@@ -532,8 +635,11 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-title">Your Preferences</div>
+      <div class="panel foil">
+        <div class="screen-header">
+          <svg viewBox="0 0 100 100" width="34" height="34"><defs><radialGradient id="brassD" cx="34%" cy="28%"><stop offset="0%" stop-color="#f0d6a4"/><stop offset="52%" stop-color="#b8935a"/><stop offset="100%" stop-color="#6e5333"/></radialGradient></defs><circle cx="50" cy="50" r="48" fill="url(#brassD)"/><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(18,10,23,.4)" stroke-width="1" stroke-dasharray="2.6 3.2"/><text x="50" y="61" text-anchor="middle" fill="#120a17" stroke="#120a17" stroke-width=".7" stroke-linejoin="round" font-family="'Great Vibes', cursive" font-size="35">SLC</text></svg>
+          <div class="screen-title">Tell me about tonight</div>
+        </div>
 
         <div style="margin-bottom:24px">
           <div class="budget-row">
@@ -544,106 +650,41 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
           <div class="budget-ends"><span>$20</span><span>$500</span></div>
         </div>
 
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">Style</label>
-            <select class="form-control" id="styleSelect">
-              <option value="">Any style</option>
-              <option value="bold red">Bold red</option>
-              <option value="medium red">Medium red</option>
-              <option value="light elegant red">Light, elegant red</option>
-              <option value="crisp dry white">Crisp dry white</option>
-              <option value="rich oaked white">Rich, oaked white</option>
-              <option value="aromatic white">Aromatic white</option>
-              <option value="rosé">Rosé</option>
-              <option value="sparkling">Sparkling</option>
-              <option value="natural/minimal intervention">Natural / minimal intervention</option>
-              <option value="dessert or fortified">Dessert or fortified</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Region</label>
-            <select class="form-control" id="regionSelect">
-              <option value="">Any region</option>
-              <option value="Barossa Valley">Barossa Valley</option>
-              <option value="Clare Valley">Clare Valley</option>
-              <option value="Coonawarra">Coonawarra</option>
-              <option value="Margaret River">Margaret River</option>
-              <option value="Yarra Valley">Yarra Valley</option>
-              <option value="McLaren Vale">McLaren Vale</option>
-              <option value="Hunter Valley">Hunter Valley</option>
-              <option value="Bordeaux">Bordeaux</option>
-              <option value="Burgundy">Burgundy</option>
-              <option value="Rhône Valley">Rhône Valley</option>
-              <option value="Alsace">Alsace</option>
-              <option value="Champagne">Champagne</option>
-              <option value="Tuscany">Tuscany</option>
-              <option value="Piedmont">Piedmont</option>
-              <option value="Sicily">Sicily</option>
-              <option value="Spain">Spain</option>
-              <option value="New Zealand">New Zealand</option>
-              <option value="Argentina">Argentina</option>
-              <option value="California">California</option>
-              <option value="Oregon">Oregon</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Occasion</label>
-            <select class="form-control" id="occasionSelect">
-              <option value="">Any occasion</option>
-              <option value="casual dinner">Casual dinner</option>
-              <option value="business dinner">Business dinner</option>
-              <option value="celebration">Celebration</option>
-              <option value="romantic evening">Romantic evening</option>
-              <option value="by the glass">By the glass</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Food pairing</label>
-            <select class="form-control" id="pairingSelect">
-              <option value="">No preference</option>
-              <option value="red meat">Red meat</option>
-              <option value="seafood">Seafood</option>
-              <option value="poultry">Poultry</option>
-              <option value="pasta or risotto">Pasta / risotto</option>
-              <option value="cheese">Cheese</option>
-              <option value="vegetarian">Vegetarian</option>
-              <option value="no food">Aperitif / no food</option>
-            </select>
-          </div>
-        </div>
+        <div class="chip-group-label">Style</div>
+        <div class="chip-row" id="styleChips"></div>
 
-        <div class="form-group" style="margin-top:16px">
-          <label class="form-label">Anything else</label>
-          <textarea class="form-control" id="notesInput" placeholder="e.g. I love Pinot Noir but hate anything too tannic. Surprise us."></textarea>
+        <div class="chip-group-label">Food</div>
+        <div class="chip-row" id="pairingChips"></div>
+
+        <div class="form-group">
+          <label class="form-label">Anything else — region, occasion, whatever matters</label>
+          <textarea class="form-control" id="notesInput" placeholder="e.g. Barossa if they've got it. Celebrating tonight. I love Pinot but hate anything too tannic."></textarea>
         </div>
       </div>
 
-      <button class="btn-primary" id="submitBtn" disabled onclick="submitForm()">
-        Consult the Sommelier
-      </button>
+      <div class="sticky-cta">
+        <button class="btn-primary" id="submitBtn" disabled onclick="submitForm()">Pour Me Something</button>
+      </div>
     </div>
 
     <!-- LABEL MODE -->
     <div id="modeLabelPanels" style="display:none">
-      <div class="panel">
-        <div class="panel-title">Wine Label</div>
+      <div class="panel foil">
+        <div class="panel-title">The Label</div>
 
         <div class="photo-callout">
-          <div class="photo-callout-icon">🏷️</div>
+          <svg class="icon photo-callout-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.6 12 21.2 2.8 12 2 3l9 .8 8.6 8.8Z"/><circle cx="7.5" cy="7.5" r="1.1" fill="currentColor" stroke="none"/></svg>
           <div class="photo-callout-text">
             <div class="photo-callout-title">Photograph the label</div>
-            <div class="photo-callout-body">
-              Take a clear photo of the front label — the back label too if you have it, for the vintage and details. We'll identify the wine and pull up what critics say.
-            </div>
+            <div class="photo-callout-body">Front label's enough. Back label too if you have it, for the vintage and finer details.</div>
           </div>
         </div>
 
         <div class="upload-zone" id="labelUploadZone" onclick="document.getElementById('labelFileInput').click()">
           <input type="file" id="labelFileInput" accept="image/*" multiple>
-          <span class="upload-icon">🏷️</span>
+          <svg class="icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.6 12 21.2 2.8 12 2 3l9 .8 8.6 8.8Z"/><circle cx="7.5" cy="7.5" r="1.1" fill="currentColor" stroke="none"/></svg>
           <div class="upload-label">Drop the label photo here, or click to browse</div>
-          <div class="upload-sub">JPG or PNG &nbsp;·&nbsp; Front and back label welcome</div>
+          <div class="upload-sub">JPG or PNG &nbsp;·&nbsp; Front and back welcome</div>
         </div>
 
         <div class="image-grid" id="labelImageGrid" style="display:none"></div>
@@ -653,41 +694,59 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-title">Anything Specific?</div>
+      <div class="panel foil">
         <div class="form-group">
-          <label class="form-label">Optional</label>
-          <textarea class="form-control" id="labelNotesInput" placeholder="e.g. Is this a good drinking window? What should I pair it with?"></textarea>
+          <label class="form-label">Anything specific? Optional</label>
+          <textarea class="form-control" id="labelNotesInput" placeholder="e.g. Is this in its drinking window? What should I pair it with?"></textarea>
         </div>
       </div>
 
-      <button class="btn-primary" id="labelSubmitBtn" disabled onclick="submitLabelScan()">
-        Identify This Wine
-      </button>
+      <div class="sticky-cta">
+        <button class="btn-primary" id="labelSubmitBtn" disabled onclick="submitLabelScan()">Read This Label</button>
+      </div>
     </div>
   </div>
 
   <!-- Loading -->
   <div class="loading" id="loading">
-    <div class="flame">🕯</div>
-    <div class="loading-title" id="loadingTitle">Reading the list</div>
-    <div class="loading-sub" id="loadingSub">Considering your palate. This takes a moment.</div>
+    <div class="seal-wrap">
+      <svg class="seal-flicker" viewBox="0 0 100 100" width="112" height="112" role="img" aria-label="Reading">
+        <defs><radialGradient id="brassE" cx="34%" cy="28%"><stop offset="0%" stop-color="#f0d6a4"/><stop offset="52%" stop-color="#b8935a"/><stop offset="100%" stop-color="#6e5333"/></radialGradient><path id="arcE" d="M50,50 m0,-36 a36,36 0 1,1 -0.01,0" fill="none"/></defs>
+        <circle cx="50" cy="50" r="48" fill="url(#brassE)"/>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(18,10,23,.4)" stroke-width="1" stroke-dasharray="2.6 3.2"/>
+        <text fill="rgba(18,10,23,.62)" font-size="7.4" letter-spacing="2.3" font-family="Inter, sans-serif" font-weight="700"><textPath href="#arcE" startOffset="25%" text-anchor="middle">GATSBY'S WINE ORACLE</textPath></text>
+        <text fill="rgba(18,10,23,.45)" font-size="6" letter-spacing="2" font-family="Inter, sans-serif" font-weight="600"><textPath href="#arcE" startOffset="75%" text-anchor="middle">S. L. COOPER</textPath></text>
+        <text x="50" y="61" text-anchor="middle" fill="#120a17" stroke="#120a17" stroke-width=".7" stroke-linejoin="round" font-family="'Great Vibes', cursive" font-weight="400" font-size="35">SLC</text>
+      </svg>
+    </div>
+    <div class="loading-title" id="loadingTitle">Give me a moment</div>
+    <div class="loading-sub" id="loadingSub">Reading the list, then thinking about what suits you.</div>
+    <div class="progress-rule"></div>
   </div>
 
   <!-- Results -->
   <div class="results" id="results">
-    <div class="results-eyebrow" id="resultsEyebrow">Sommelier's selection</div>
-    <h2 class="results-h2" id="resultsH2">Our Recommendations</h2>
+    <div class="results-eyebrow" id="resultsEyebrow">The verdict</div>
+    <h2 class="results-h2" id="resultsH2">A few I'd happily drink</h2>
     <p class="results-meta" id="resultsMeta"></p>
     <div id="wineCards"></div>
     <div class="sommelier-note" id="sommelierNote" style="display:none">
-      <div class="sommelier-note-label" id="sommelierNoteLabel">A note from the sommelier</div>
+      <div class="sommelier-note-label" id="sommelierNoteLabel">One more thing</div>
       <p id="sommelierNoteText"></p>
     </div>
-    <button class="reset-btn" onclick="reset()">← Start a new search</button>
+    <button class="reset-btn" onclick="reset()">← Another list</button>
   </div>
 
-  <footer class="footer">Shamus Cooper's Wine Oracle — for the curious table</footer>
+  <!-- Kept Bottles -->
+  <div class="kept-screen" id="keptScreen">
+    <div class="results-eyebrow">Your reference</div>
+    <h2 class="results-h2">Kept Bottles</h2>
+    <p class="results-meta">Everything you've kept, newest first.</p>
+    <div id="keptList"></div>
+    <button class="reset-btn" onclick="hideKeptBottles()">← Back</button>
+  </div>
+
+  <footer class="footer">Curated by Shamus Cooper</footer>
 </div>
 
 <script>
@@ -713,7 +772,6 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   let currentUser = null;
 
   function isMagicLinkRedirect() {
-    // Supabase puts auth tokens in the URL hash after a magic-link click
     return window.location.hash.includes('access_token') || window.location.hash.includes('type=magiclink');
   }
 
@@ -790,7 +848,6 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
   async function initAuth() {
     if (!supabaseClient) {
-      // No Supabase — app can't gate on auth, so just show it openly.
       showLoggedIn();
       return;
     }
@@ -800,7 +857,6 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session && session.user) {
       currentUser = session.user;
-      // Clean the auth tokens out of the URL so refreshing doesn't re-trigger this
       if (cameFromMagicLink) {
         history.replaceState(null, '', window.location.pathname + window.location.search);
         showMagicLanded();
@@ -838,9 +894,37 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   }
   updateBudget(document.getElementById('budgetSlider'));
 
+  // --- Chip pickers ---
+  const STYLE_OPTIONS = ['Bold red','Medium red','Light red','Crisp white','Oaked white','Aromatic white','Rosé','Sparkling','Natural','Dessert/fortified'];
+  const PAIRING_OPTIONS = ['Red meat','Seafood','Poultry','Pasta/risotto','Cheese','Vegetarian','No food'];
+  let selectedStyle = '';
+  let selectedPairing = '';
+
+  function renderChips(containerId, options, groupName) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = options.map(opt =>
+      `<button type="button" class="chip" data-value="${esc(opt)}" onclick="toggleChip('${groupName}', this)">${esc(opt)}</button>`
+    ).join('');
+  }
+  renderChips('styleChips', STYLE_OPTIONS, 'style');
+  renderChips('pairingChips', PAIRING_OPTIONS, 'pairing');
+
+  function toggleChip(group, btn) {
+    const container = btn.parentElement;
+    const wasActive = btn.classList.contains('active');
+    Array.from(container.children).forEach(c => c.classList.remove('active'));
+    if (!wasActive) {
+      btn.classList.add('active');
+      if (group === 'style') selectedStyle = btn.dataset.value;
+      if (group === 'pairing') selectedPairing = btn.dataset.value;
+    } else {
+      if (group === 'style') selectedStyle = '';
+      if (group === 'pairing') selectedPairing = '';
+    }
+  }
+
   const fileInput = document.getElementById('fileInput');
   fileInput.addEventListener('change', e => {
-    console.log('[upload] change event fired, files:', e.target.files.length);
     Array.from(e.target.files).forEach(addImage);
     fileInput.value = '';
   });
@@ -863,7 +947,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     document.getElementById('errorBox').classList.remove('show');
   }
 
-  // --- Label photo upload (separate array, images only, no PDF) ---
+  // --- Label photo upload ---
   let labelImages = [];
 
   const labelFileInput = document.getElementById('labelFileInput');
@@ -989,15 +1073,19 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       "why": "${notes ? 'A direct answer to what was asked, or a serving/pairing suggestion if not fully answerable' : 'A serving or pairing suggestion for this wine'}"
     }
   ],
+  "confidence": 1,
+  "confidence_reason": "Short plain-English reason, e.g. Front label clear, vintage legible",
   "sommelier_note": "Note the confidence of the identification if the label was unclear or partially obscured, otherwise a brief general remark."
-}`
+}
+
+For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is a best guess, and 1 is not sure.`
       }
     ];
 
     document.getElementById('formSection').style.display = 'none';
     document.getElementById('errorBox').classList.remove('show');
-    document.getElementById('loadingTitle').textContent = 'Reading the label';
-    document.getElementById('loadingSub').textContent = 'Identifying the wine. This takes a moment.';
+    document.getElementById('loadingTitle').textContent = 'Give me a moment';
+    document.getElementById('loadingSub').textContent = 'Looking closely at the label.';
     document.getElementById('loading').classList.add('show');
     document.getElementById('results').classList.remove('show');
 
@@ -1019,11 +1107,17 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       if (!match) throw new Error('Could not read the response. Please try again.');
       const parsed = JSON.parse(match[0]);
 
-      document.getElementById('resultsEyebrow').textContent = 'Label scanned';
-      document.getElementById('resultsH2').textContent = 'Wine Identified';
-      document.getElementById('sommelierNoteLabel').textContent = 'A note on this wine';
+      document.getElementById('resultsEyebrow').textContent = 'From the label';
+      document.getElementById('resultsH2').textContent = "I know this one";
+      document.getElementById('sommelierNoteLabel').textContent = 'One more thing';
 
-      renderResults(parsed, null, null, null);
+      renderResults(parsed, {
+        budgetLabel: null,
+        isLabelMode: true,
+        confidence: parsed.confidence,
+        confidenceReason: parsed.confidence_reason,
+        labelThumb: labelImages[0] ? labelImages[0].dataUrl : null,
+      });
     } catch (e) {
       document.getElementById('loading').classList.remove('show');
       document.getElementById('formSection').style.display = 'block';
@@ -1051,11 +1145,9 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
     return (file.name || '').toLowerCase().endsWith('.pdf');
   }
 
-  const MAX_PDF_BYTES = 20 * 1024 * 1024; // 20MB, Anthropic's per-file limit
+  const MAX_PDF_BYTES = 20 * 1024 * 1024;
 
   function addImage(file) {
-    console.log('[upload] addImage called for:', file.name, file.type, file.size);
-
     if (looksLikePdf(file)) {
       if (file.size > MAX_PDF_BYTES) {
         showUploadError(`"${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). PDFs must be under 20MB.`);
@@ -1063,72 +1155,47 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       }
       const reader = new FileReader();
       reader.onload = () => {
-        images.push({
-          kind: 'pdf',
-          name: file.name,
-          base64: reader.result.split(',')[1],
-        });
-        console.log('[upload] PDF added, total count:', images.length);
+        images.push({ kind: 'pdf', name: file.name, base64: reader.result.split(',')[1] });
         renderThumbnails();
         document.getElementById('submitBtn').disabled = false;
       };
-      reader.onerror = () => {
-        showUploadError(`"${file.name}" could not be opened.`);
-      };
+      reader.onerror = () => showUploadError(`"${file.name}" could not be opened.`);
       reader.readAsDataURL(file);
       return;
     }
 
     if (!looksLikeImage(file)) {
-      console.log('[upload] rejected — not an image or PDF');
       showUploadError(`"${file.name}" was not recognised as an image or PDF and was skipped.`);
       return;
     }
 
     const reader = new FileReader();
     reader.onload = () => {
-      console.log('[upload] FileReader onload fired');
       const img = new Image();
       img.onload = () => {
-        console.log('[upload] Image onload fired, dimensions:', img.width, img.height);
         const MAX_DIM = 1600;
         let { width, height } = img;
-
         if (width > MAX_DIM || height > MAX_DIM) {
           const scale = MAX_DIM / Math.max(width, height);
           width = Math.round(width * scale);
           height = Math.round(height * scale);
         }
-
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
         const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        console.log('[upload] canvas resized, dataUrl length:', resizedDataUrl.length);
 
-        images.push({
-          kind: 'image',
-          mediaType: 'image/jpeg',
-          base64: resizedDataUrl.split(',')[1],
-          dataUrl: resizedDataUrl,
-        });
-        console.log('[upload] pushed to images array, total count:', images.length);
+        images.push({ kind: 'image', mediaType: 'image/jpeg', base64: resizedDataUrl.split(',')[1], dataUrl: resizedDataUrl });
         renderThumbnails();
         document.getElementById('submitBtn').disabled = false;
       };
-      img.onerror = (err) => {
-        console.error('[upload] Image onerror fired:', err);
+      img.onerror = () => {
         showUploadError(`"${file.name}" could not be read as an image. It may be a HEIC photo — try exporting it as JPEG first, or take a new photo with format set to "Most Compatible" in your phone's camera settings.`);
       };
       img.src = reader.result;
     };
-    reader.onerror = (err) => {
-      console.error('[upload] FileReader onerror fired:', err);
-      showUploadError(`"${file.name}" could not be opened.`);
-    };
+    reader.onerror = () => showUploadError(`"${file.name}" could not be opened.`);
     reader.readAsDataURL(file);
   }
 
@@ -1161,7 +1228,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       if (item.kind === 'pdf') {
         thumb.className = 'image-thumb pdf-thumb';
         thumb.innerHTML = `
-          <span class="pdf-icon">📄</span>
+          <svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v4h4"/></svg>
           <span class="pdf-thumb-label">PDF</span>
           <button class="image-thumb-remove" onclick="removeImage(${i})">×</button>
           <div class="image-thumb-label">${esc(item.name || 'Wine list')}</div>
@@ -1188,32 +1255,20 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
     if (images.length === 0) return;
 
     const budget = document.getElementById('budgetSlider').value;
-    const style = document.getElementById('styleSelect').value;
-    const region = document.getElementById('regionSelect').value;
-    const occasion = document.getElementById('occasionSelect').value;
-    const pairing = document.getElementById('pairingSelect').value;
     const notes = document.getElementById('notesInput').value.trim();
 
     const prefs = [
       `Budget: up to $${budget} AUD per bottle`,
-      style && `Style preference: ${style}`,
-      region && `Preferred region: ${region}`,
-      occasion && `Occasion: ${occasion}`,
-      pairing && `Food pairing: ${pairing}`,
-      notes && `Additional notes: ${notes}`,
+      selectedStyle && `Style preference: ${selectedStyle}`,
+      selectedPairing && `Food pairing: ${selectedPairing}`,
+      notes && `Additional notes (may include region or occasion): ${notes}`,
     ].filter(Boolean).join('\n');
 
     const fileBlocks = images.map(item => {
       if (item.kind === 'pdf') {
-        return {
-          type: 'document',
-          source: { type: 'base64', media_type: 'application/pdf', data: item.base64 },
-        };
+        return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: item.base64 } };
       }
-      return {
-        type: 'image',
-        source: { type: 'base64', media_type: item.mediaType, data: item.base64 },
-      };
+      return { type: 'image', source: { type: 'base64', media_type: item.mediaType, data: item.base64 } };
     });
 
     const pageCount = images.length;
@@ -1242,7 +1297,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       "grape": "Primary grape variety or blend",
       "style": "Brief style descriptor",
       "description": "Two to three sentences on character, flavour profile, and when to drink it",
-      "why": "One sentence explaining why this suits the stated preferences"
+      "why": "One or two sentences of first-person reasoning for why this suits what was asked. Present tense, opinionated, no more than two sentences."
     }
   ],
   "sommelier_note": "One to two sentences of overall guidance or a pairing suggestion."
@@ -1252,6 +1307,8 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
 
     document.getElementById('formSection').style.display = 'none';
     document.getElementById('errorBox').classList.remove('show');
+    document.getElementById('loadingTitle').textContent = 'Give me a moment';
+    document.getElementById('loadingSub').textContent = `Reading ${pageCount === 1 ? 'the list' : pageCount + ' pages'}, then thinking about what suits you.`;
     document.getElementById('loading').classList.add('show');
     document.getElementById('results').classList.remove('show');
 
@@ -1268,18 +1325,19 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       }
 
       const data = await res.json();
-      const raw = (data.content || [])
-        .filter(b => b.type === 'text')
-        .map(b => b.text)
-        .join('');
+      const raw = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
       const match = raw.match(/\{[\s\S]*\}/);
       if (!match) throw new Error('Could not read the response. Please try again.');
       const parsed = JSON.parse(match[0]);
-      document.getElementById('resultsEyebrow').textContent = "Sommelier's selection";
-      document.getElementById('resultsH2').textContent = 'Our Recommendations';
-      document.getElementById('sommelierNoteLabel').textContent = 'A note from the sommelier';
 
-      renderResults(parsed, budget, style, region);
+      document.getElementById('resultsEyebrow').textContent = 'The verdict';
+      document.getElementById('resultsH2').textContent = wordForCount(parsed.recommendations?.length) + " I'd happily drink";
+      document.getElementById('sommelierNoteLabel').textContent = 'One more thing';
+
+      renderResults(parsed, {
+        budgetLabel: `Budget up to $${budget}`,
+        isLabelMode: false,
+      });
     } catch (e) {
       document.getElementById('loading').classList.remove('show');
       document.getElementById('formSection').style.display = 'block';
@@ -1289,37 +1347,70 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
     }
   }
 
-  function renderResults(data, budget, style, region) {
+  function wordForCount(n) {
+    const words = { 1: 'One', 2: 'Two', 3: 'Three', 4: 'Four', 5: 'Five' };
+    return words[n] || (n || 'A few');
+  }
+
+  function renderResults(data, meta) {
     document.getElementById('loading').classList.remove('show');
 
-    const meta = budget
-      ? [`Budget up to $${budget}`, style, region].filter(Boolean).join(' · ')
-      : 'Identified from label photo';
-    document.getElementById('resultsMeta').textContent = meta;
+    const metaParts = [];
+    if (meta.budgetLabel) metaParts.push(meta.budgetLabel);
+    if (selectedStyle && !meta.isLabelMode) metaParts.push(selectedStyle);
+    document.getElementById('resultsMeta').textContent = meta.isLabelMode
+      ? 'Identified from your photo'
+      : metaParts.join(' · ');
 
     const cards = document.getElementById('wineCards');
     cards.innerHTML = '';
 
     if (!data.recommendations?.length) {
-      cards.innerHTML = '<p style="color:#9b91a8;font-size:13px;margin-bottom:20px">No matching wines found. Try adjusting your preferences.</p>';
+      cards.innerHTML = '<p style="color:#a89dae;font-size:13px;margin-bottom:20px">Nothing matched closely enough. Try adjusting what you told me.</p>';
     } else {
       data.recommendations.forEach((wine, i) => {
+        const isHero = i === 0;
         const d = document.createElement('div');
-        d.className = 'wine-card';
+        d.className = 'wine-card' + (isHero ? ' hero' : '');
         d.style.animationDelay = `${i * 0.07}s`;
+
+        let topBlock = '';
+        if (isHero && meta.isLabelMode && meta.labelThumb) {
+          topBlock = `
+            <div class="hero-label">MY READ ON THIS BOTTLE</div>
+            <div class="label-hero-top">
+              <img class="label-thumb" src="${meta.labelThumb}" alt="Label photo">
+              <div style="flex:1">
+                <div class="wine-name">${esc(wine.name)}</div>
+                <div class="wine-meta">
+                  ${wine.region ? `<span class="tag">${esc(wine.region)}</span>` : ''}
+                  ${wine.grape ? `<span class="tag">${esc(wine.grape)}</span>` : ''}
+                  ${wine.style ? `<span class="tag">${esc(wine.style)}</span>` : ''}
+                </div>
+              </div>
+            </div>
+            ${renderConfidenceMeter(meta.confidence, meta.confidenceReason)}
+          `;
+        } else {
+          topBlock = `
+            ${isHero ? '<div class="hero-label">MY PICK OF THE LIST</div>' : ''}
+            <div class="wine-top">
+              <div class="wine-name">${esc(wine.name)}</div>
+              ${wine.price ? `<div class="wine-price">${esc(wine.price)}</div>` : ''}
+            </div>
+            <div class="wine-meta">
+              ${wine.region ? `<span class="tag">${esc(wine.region)}</span>` : ''}
+              ${wine.grape ? `<span class="tag">${esc(wine.grape)}</span>` : ''}
+              ${wine.style ? `<span class="tag">${esc(wine.style)}</span>` : ''}
+            </div>
+          `;
+        }
+
         d.innerHTML = `
           <div class="wine-num">${String(i+1).padStart(2,'0')}</div>
-          <div class="wine-top">
-            <div class="wine-name">${esc(wine.name)}</div>
-            ${wine.price ? `<div class="wine-price">${esc(wine.price)}</div>` : ''}
-          </div>
-          <div class="wine-meta">
-            ${wine.region ? `<span class="tag">${esc(wine.region)}</span>` : ''}
-            ${wine.grape ? `<span class="tag">${esc(wine.grape)}</span>` : ''}
-            ${wine.style ? `<span class="tag">${esc(wine.style)}</span>` : ''}
-          </div>
+          ${topBlock}
+          ${wine.why ? `<p class="wine-why">${esc(wine.why)}</p>` : ''}
           ${wine.description ? `<p class="wine-desc">${esc(wine.description)}</p>` : ''}
-          ${wine.why ? `<div class="wine-why"><strong>Why this</strong> &nbsp;—&nbsp; ${esc(wine.why)}</div>` : ''}
           <div class="critic-note" id="critic-${i}">
             <div class="critic-note-label">Critic reviews</div>
             <div class="critic-note-loading" id="critic-loading-${i}">
@@ -1328,14 +1419,24 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
             <div class="critic-note-body" id="critic-body-${i}" style="display:none"></div>
           </div>
           <div class="prior-rating" id="prior-${i}" style="display:none"></div>
-          <div class="wine-rate">
-            <div>
-              <div class="wine-rate-label">Rate this wine</div>
-              <div class="stars" id="stars-${i}" data-rating="0">
-                ${[1,2,3,4,5].map(n => `<button class="star" data-value="${n}" onclick="setRating(${i}, ${n})">★</button>`).join('')}
-              </div>
+          <div class="action-row">
+            <button class="icon-btn" id="keep-${i}" onclick="keepWine(${i})">
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>
+              Keep
+            </button>
+            <div class="action-divider"></div>
+            <button class="icon-btn" onclick="shareWine(${i})">
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.7 15.7 6.6M8.3 13.3l7.4 4.1"/></svg>
+              Share
+            </button>
+            <div class="action-divider"></div>
+            <div class="stars" id="stars-${i}" data-rating="0">
+              ${[1,2,3,4,5].map(n => `<button class="star" data-value="${n}" onclick="setRating(${i}, ${n})">★</button>`).join('')}
             </div>
-            <div class="wine-rate-saved" id="saved-${i}">✓ Saved</div>
+            <div class="wine-rate-saved" id="saved-${i}">
+              <svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Saved
+            </div>
           </div>
         `;
         cards.appendChild(d);
@@ -1354,6 +1455,19 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
     }
 
     document.getElementById('results').classList.add('show');
+  }
+
+  function renderConfidenceMeter(confidence, reason) {
+    const c = Math.max(1, Math.min(4, Number(confidence) || 2));
+    const words = { 4: 'Certain', 3: 'Fairly sure', 2: 'Best guess', 1: 'Not sure' };
+    const bars = [1,2,3,4].map(n => `<span class="conf-bar ${n <= c ? 'filled' : ''}"></span>`).join('');
+    return `
+      <div class="confidence-meter">
+        <div class="conf-bars">${bars}</div>
+        <span class="conf-word">${words[c]}</span>
+        ${reason ? `<span class="conf-reason">— ${esc(reason)}</span>` : ''}
+      </div>
+    `;
   }
 
   async function fetchCriticNotes(wine, i) {
@@ -1441,11 +1555,39 @@ If nothing credible is found for this exact wine, set found to false and leave o
       const starsHtml = [1,2,3,4,5].map(n =>
         `<span class="star-mini ${n <= rating ? '' : 'empty'}">★</span>`
       ).join('');
-      el.innerHTML = `<span class="stars-mini">${starsHtml}</span> You rated this before`;
+      el.innerHTML = `<span class="stars-mini">${starsHtml}</span> You've kept this before`;
       el.style.display = 'flex';
     } catch (e) {
-      // silent — prior rating lookup is a nice-to-have, not critical
+      // silent — nice-to-have only
     }
+  }
+
+  async function saveRatingToSupabase(wine, rating) {
+    if (!supabaseClient || !currentUser) return false;
+    try {
+      await supabaseClient.from('wine_ratings').insert({
+        user_id: currentUser.id,
+        wine_name: wine.name,
+        region: wine.region || null,
+        grape: wine.grape || null,
+        style: wine.style || null,
+        price: wine.price || null,
+        rating: rating,
+        notes: wine.description || null,
+        recommended_for: wine.why || null,
+      });
+      return true;
+    } catch (e) {
+      console.error('Failed to save rating', e);
+      return false;
+    }
+  }
+
+  function flashSaved(i) {
+    const savedEl = document.getElementById(`saved-${i}`);
+    if (!savedEl) return;
+    savedEl.classList.add('show');
+    setTimeout(() => savedEl.classList.remove('show'), 2500);
   }
 
   async function setRating(i, value) {
@@ -1462,28 +1604,104 @@ If nothing credible is found for this exact wine, set found to false and leave o
       return;
     }
 
-    try {
-      await supabaseClient.from('wine_ratings').insert({
-        user_id: currentUser.id,
-        wine_name: wine.name,
-        region: wine.region || null,
-        grape: wine.grape || null,
-        style: wine.style || null,
-        price: wine.price || null,
-        rating: value,
-        notes: wine.description || null,
-        recommended_for: wine.why || null,
-      });
-      const savedEl = document.getElementById(`saved-${i}`);
-      savedEl.classList.add('show');
-      setTimeout(() => savedEl.classList.remove('show'), 2500);
-    } catch (e) {
-      console.error('Failed to save rating', e);
+    const ok = await saveRatingToSupabase(wine, value);
+    if (ok) flashSaved(i);
+  }
+
+  async function keepWine(i) {
+    const wine = window.currentWines[i];
+    if (!wine) return;
+
+    const starsEl = document.getElementById(`stars-${i}`);
+    let rating = Number(starsEl.dataset.rating) || 0;
+    if (rating === 0) {
+      rating = 5;
+      starsEl.dataset.rating = 5;
+      Array.from(starsEl.children).forEach(btn => btn.classList.add('filled'));
+    }
+
+    const keepBtn = document.getElementById(`keep-${i}`);
+    if (!supabaseClient || !currentUser) {
+      console.warn('[keep] Not signed in — cannot save.');
+      return;
+    }
+
+    const ok = await saveRatingToSupabase(wine, rating);
+    if (ok) {
+      keepBtn.classList.add('kept');
+      flashSaved(i);
+    }
+  }
+
+  function shareWine(i) {
+    const wine = window.currentWines[i];
+    if (!wine) return;
+    const text = `${wine.name}${wine.price ? ' — ' + wine.price : ''}${wine.why ? '\n' + wine.why : ''}`;
+
+    if (navigator.share) {
+      navigator.share({ title: wine.name, text }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => flashSaved(i)).catch(() => {});
     }
   }
 
   function reset() {
     document.getElementById('results').classList.remove('show');
+    document.getElementById('formSection').style.display = 'block';
+    document.getElementById('keptScreen').classList.remove('show');
+  }
+
+  // --- Kept Bottles ---
+  async function showKeptBottles() {
+    document.getElementById('formSection').style.display = 'none';
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('keptScreen').classList.add('show');
+
+    const listEl = document.getElementById('keptList');
+    listEl.innerHTML = '<p style="color:var(--text-dim);font-size:13px">Loading...</p>';
+
+    if (!supabaseClient || !currentUser) {
+      listEl.innerHTML = '<div class="kept-empty">Sign in to see wines you have kept.</div>';
+      return;
+    }
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('wine_ratings')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        listEl.innerHTML = '<div class="kept-empty">Nothing kept yet. Rate or keep a wine and it will show up here.</div>';
+        return;
+      }
+
+      listEl.innerHTML = data.map(row => {
+        const stars = [1,2,3,4,5].map(n => `<span class="kept-star ${n <= row.rating ? '' : 'empty'}">★</span>`).join('');
+        const date = row.created_at ? new Date(row.created_at).toLocaleDateString() : '';
+        const metaLine = [row.region, row.price, date].filter(Boolean).join(' · ');
+        return `
+          <div class="kept-card">
+            <div class="kept-card-top">
+              <div class="kept-name">${esc(row.wine_name)}</div>
+              <div class="kept-stars">${stars}</div>
+            </div>
+            ${metaLine ? `<div class="kept-meta">${esc(metaLine)}</div>` : ''}
+            ${row.recommended_for ? `<div class="kept-notes">${esc(row.recommended_for)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      listEl.innerHTML = '<div class="kept-empty">Could not load your kept bottles right now.</div>';
+    }
+  }
+
+  function hideKeptBottles() {
+    document.getElementById('keptScreen').classList.remove('show');
     document.getElementById('formSection').style.display = 'block';
   }
 
