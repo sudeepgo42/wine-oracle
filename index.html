@@ -90,14 +90,15 @@ svg.icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
 /* Nav row: mode tabs + kept bottles link */
 .nav-row {
   display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 .mode-tabs {
-  display: flex; gap: 4px; flex: 1;
+  display: flex; gap: 4px; flex: 1; min-width: 0;
   background: var(--bg-surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 4px;
 }
 .mode-tab {
-  flex: 1; padding: 11px 16px; background: none; border: none;
+  flex: 1; padding: 11px 10px; background: none; border: none;
   border-radius: 2px; cursor: pointer;
   font-family: var(--sans); font-size: 12px; font-weight: 600;
   letter-spacing: 0.06em; color: var(--text-dim);
@@ -109,7 +110,7 @@ svg.icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
   color: #1d1220;
 }
 .kept-nav-link {
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
   font-family: var(--sans); font-size: 11px; font-weight: 600;
   color: var(--text-dim); background: var(--bg-surface);
   border: 1px solid var(--border); border-radius: var(--radius);
@@ -117,6 +118,12 @@ svg.icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
   transition: all 0.2s;
 }
 .kept-nav-link:hover { color: var(--brass-light); border-color: var(--border-hover); }
+
+@media (max-width: 560px) {
+  .nav-row { flex-direction: column; align-items: stretch; }
+  .kept-nav-link { width: 100%; }
+  .mode-tab { padding: 11px 6px; font-size: 11px; }
+}
 
 /* Foil-edge panel */
 .panel {
