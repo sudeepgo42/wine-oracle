@@ -1,8 +1,6 @@
 [build]
-  functions = "netlify/functions"
   publish = "."
 
-[[redirects]]
-  from = "/api/sommelier"
-  to = "/.netlify/functions/sommelier"
-  status = 200
+[[edge_functions]]
+  path = "/api/sommelier"
+  function = "sommelier"
