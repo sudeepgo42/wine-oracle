@@ -464,7 +464,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
       <button class="btn-primary" id="loginBtn" onclick="sendMagicLink()">Send Magic Link</button>
       <div class="login-error" id="loginError"></div>
     </div>
-    <div class="login-sent" id="loginSent">Check your email for a sign-in link. You can close this tab.</div>
+    <div class="login-sent" id="loginSent">Check your email and tap the link. This tab will sign in on its own once you do — no need to come back to your inbox tab afterwards.</div>
   </div>
 </div>
 
@@ -475,8 +475,8 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     <h1>You're <strong>Signed In</strong></h1>
     <p>If Wine Oracle is already open in another tab, you can close this one. Otherwise, continue right here.</p>
     <div class="login-form">
-      <button class="btn-primary" id="closeTabBtn" onclick="attemptCloseTab()">Close This Tab</button>
-      <button class="reset-btn" style="margin-top:4px" onclick="continueInThisTab()">Continue here instead →</button>
+      <p style="font-size:12px; color:var(--text-dim); margin-bottom:16px; margin-top:-8px;">This tab isn't needed anymore — your original tab should sign in on its own. Feel free to close this one manually, or continue right here.</p>
+      <button class="btn-primary" onclick="continueInThisTab()">Continue Here Instead</button>
     </div>
   </div>
 </div>
@@ -738,16 +738,6 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     document.getElementById('magicLandedGate').style.display = 'flex';
     document.getElementById('appWrap').style.display = 'none';
     document.getElementById('logoutLink').style.display = 'none';
-  }
-
-  function attemptCloseTab() {
-    window.close();
-    // Most mobile browsers block window.close() on tabs not opened via script.
-    // If we're still here after a moment, fall back to letting them continue.
-    setTimeout(() => {
-      const btn = document.getElementById('closeTabBtn');
-      if (btn) btn.textContent = "Couldn't close automatically — use your browser's tab controls, or continue below";
-    }, 400);
   }
 
   function continueInThisTab() {
