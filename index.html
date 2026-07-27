@@ -98,6 +98,25 @@ body::after {
   max-width: 440px; margin: 0 auto;
 }
 
+/* Mode tabs */
+.mode-tabs {
+  display: flex; gap: 4px; margin-bottom: 24px;
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 4px;
+}
+.mode-tab {
+  flex: 1; padding: 11px 16px; background: none; border: none;
+  border-radius: 2px; cursor: pointer;
+  font-family: var(--sans); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; color: var(--text-dim);
+  transition: all 0.2s;
+}
+.mode-tab:hover { color: var(--text-secondary); }
+.mode-tab.active {
+  background: linear-gradient(180deg, var(--brass-light), var(--brass));
+  color: #1d1220;
+}
+
 /* Photo instruction callout */
 .photo-callout {
   display: flex; gap: 14px; align-items: flex-start;
@@ -400,140 +419,190 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   <div id="formSection">
     <div class="error-box" id="errorBox"></div>
 
-    <div class="panel">
-      <div class="panel-title">Wine List</div>
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tabList" onclick="switchMode('list')">Wine List</button>
+      <button class="mode-tab" id="tabLabel" onclick="switchMode('label')">Scan a Label</button>
+    </div>
 
-      <div class="photo-callout">
-        <div class="photo-callout-icon">🍷</div>
-        <div class="photo-callout-text">
-          <div class="photo-callout-title">Photo or PDF, whichever is easiest</div>
-          <div class="photo-callout-body">
-            Upload a PDF of the wine list, or photograph each page with your phone camera. Add as many pages as you need.
+    <!-- LIST MODE -->
+    <div id="modeListPanels">
+      <div class="panel">
+        <div class="panel-title">Wine List</div>
+
+        <div class="photo-callout">
+          <div class="photo-callout-icon">🍷</div>
+          <div class="photo-callout-text">
+            <div class="photo-callout-title">Photo or PDF, whichever is easiest</div>
+            <div class="photo-callout-body">
+              Upload a PDF of the wine list, or photograph each page with your phone camera. Add as many pages as you need.
+            </div>
           </div>
         </div>
+
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <input type="file" id="fileInput" accept=".pdf,image/*" multiple>
+          <span class="upload-icon">🍷</span>
+          <div class="upload-label">Drop the wine list here, or click to browse</div>
+          <div class="upload-sub">PDF, JPG or PNG &nbsp;·&nbsp; Multiple pages welcome</div>
+        </div>
+
+        <div class="image-grid" id="imageGrid" style="display:none"></div>
+        <div class="page-count" id="pageCount" style="display:none">
+          <span class="page-count-dot"></span>
+          <span id="pageCountText"></span>
+        </div>
       </div>
 
-      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-        <input type="file" id="fileInput" accept=".pdf,image/*" multiple>
-        <span class="upload-icon">🍷</span>
-        <div class="upload-label">Drop the wine list here, or click to browse</div>
-        <div class="upload-sub">PDF, JPG or PNG &nbsp;·&nbsp; Multiple pages welcome</div>
+      <div class="panel">
+        <div class="panel-title">Your Preferences</div>
+
+        <div style="margin-bottom:24px">
+          <div class="budget-row">
+            <span class="budget-value" id="budgetDisplay">$120</span>
+            <span class="budget-hint">max per bottle</span>
+          </div>
+          <input type="range" id="budgetSlider" min="20" max="500" step="5" value="120" oninput="updateBudget(this)">
+          <div class="budget-ends"><span>$20</span><span>$500</span></div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Style</label>
+            <select class="form-control" id="styleSelect">
+              <option value="">Any style</option>
+              <option value="bold red">Bold red</option>
+              <option value="medium red">Medium red</option>
+              <option value="light elegant red">Light, elegant red</option>
+              <option value="crisp dry white">Crisp dry white</option>
+              <option value="rich oaked white">Rich, oaked white</option>
+              <option value="aromatic white">Aromatic white</option>
+              <option value="rosé">Rosé</option>
+              <option value="sparkling">Sparkling</option>
+              <option value="natural/minimal intervention">Natural / minimal intervention</option>
+              <option value="dessert or fortified">Dessert or fortified</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Region</label>
+            <select class="form-control" id="regionSelect">
+              <option value="">Any region</option>
+              <option value="Barossa Valley">Barossa Valley</option>
+              <option value="Clare Valley">Clare Valley</option>
+              <option value="Coonawarra">Coonawarra</option>
+              <option value="Margaret River">Margaret River</option>
+              <option value="Yarra Valley">Yarra Valley</option>
+              <option value="McLaren Vale">McLaren Vale</option>
+              <option value="Hunter Valley">Hunter Valley</option>
+              <option value="Bordeaux">Bordeaux</option>
+              <option value="Burgundy">Burgundy</option>
+              <option value="Rhône Valley">Rhône Valley</option>
+              <option value="Alsace">Alsace</option>
+              <option value="Champagne">Champagne</option>
+              <option value="Tuscany">Tuscany</option>
+              <option value="Piedmont">Piedmont</option>
+              <option value="Sicily">Sicily</option>
+              <option value="Spain">Spain</option>
+              <option value="New Zealand">New Zealand</option>
+              <option value="Argentina">Argentina</option>
+              <option value="California">California</option>
+              <option value="Oregon">Oregon</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Occasion</label>
+            <select class="form-control" id="occasionSelect">
+              <option value="">Any occasion</option>
+              <option value="casual dinner">Casual dinner</option>
+              <option value="business dinner">Business dinner</option>
+              <option value="celebration">Celebration</option>
+              <option value="romantic evening">Romantic evening</option>
+              <option value="by the glass">By the glass</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Food pairing</label>
+            <select class="form-control" id="pairingSelect">
+              <option value="">No preference</option>
+              <option value="red meat">Red meat</option>
+              <option value="seafood">Seafood</option>
+              <option value="poultry">Poultry</option>
+              <option value="pasta or risotto">Pasta / risotto</option>
+              <option value="cheese">Cheese</option>
+              <option value="vegetarian">Vegetarian</option>
+              <option value="no food">Aperitif / no food</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:16px">
+          <label class="form-label">Anything else</label>
+          <textarea class="form-control" id="notesInput" placeholder="e.g. I love Pinot Noir but hate anything too tannic. Surprise us."></textarea>
+        </div>
       </div>
 
-      <div class="image-grid" id="imageGrid" style="display:none"></div>
-      <div class="page-count" id="pageCount" style="display:none">
-        <span class="page-count-dot"></span>
-        <span id="pageCountText"></span>
-      </div>
+      <button class="btn-primary" id="submitBtn" disabled onclick="submitForm()">
+        Consult the Sommelier
+      </button>
     </div>
 
-    <div class="panel">
-      <div class="panel-title">Your Preferences</div>
+    <!-- LABEL MODE -->
+    <div id="modeLabelPanels" style="display:none">
+      <div class="panel">
+        <div class="panel-title">Wine Label</div>
 
-      <div style="margin-bottom:24px">
-        <div class="budget-row">
-          <span class="budget-value" id="budgetDisplay">$120</span>
-          <span class="budget-hint">max per bottle</span>
+        <div class="photo-callout">
+          <div class="photo-callout-icon">🏷️</div>
+          <div class="photo-callout-text">
+            <div class="photo-callout-title">Photograph the label</div>
+            <div class="photo-callout-body">
+              Take a clear photo of the front label — the back label too if you have it, for the vintage and details. We'll identify the wine and pull up what critics say.
+            </div>
+          </div>
         </div>
-        <input type="range" id="budgetSlider" min="20" max="500" step="5" value="120" oninput="updateBudget(this)">
-        <div class="budget-ends"><span>$20</span><span>$500</span></div>
-      </div>
 
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">Style</label>
-          <select class="form-control" id="styleSelect">
-            <option value="">Any style</option>
-            <option value="bold red">Bold red</option>
-            <option value="medium red">Medium red</option>
-            <option value="light elegant red">Light, elegant red</option>
-            <option value="crisp dry white">Crisp dry white</option>
-            <option value="rich oaked white">Rich, oaked white</option>
-            <option value="aromatic white">Aromatic white</option>
-            <option value="rosé">Rosé</option>
-            <option value="sparkling">Sparkling</option>
-            <option value="natural/minimal intervention">Natural / minimal intervention</option>
-            <option value="dessert or fortified">Dessert or fortified</option>
-          </select>
+        <div class="upload-zone" id="labelUploadZone" onclick="document.getElementById('labelFileInput').click()">
+          <input type="file" id="labelFileInput" accept="image/*" multiple>
+          <span class="upload-icon">🏷️</span>
+          <div class="upload-label">Drop the label photo here, or click to browse</div>
+          <div class="upload-sub">JPG or PNG &nbsp;·&nbsp; Front and back label welcome</div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Region</label>
-          <select class="form-control" id="regionSelect">
-            <option value="">Any region</option>
-            <option value="Barossa Valley">Barossa Valley</option>
-            <option value="Clare Valley">Clare Valley</option>
-            <option value="Coonawarra">Coonawarra</option>
-            <option value="Margaret River">Margaret River</option>
-            <option value="Yarra Valley">Yarra Valley</option>
-            <option value="McLaren Vale">McLaren Vale</option>
-            <option value="Hunter Valley">Hunter Valley</option>
-            <option value="Bordeaux">Bordeaux</option>
-            <option value="Burgundy">Burgundy</option>
-            <option value="Rhône Valley">Rhône Valley</option>
-            <option value="Alsace">Alsace</option>
-            <option value="Champagne">Champagne</option>
-            <option value="Tuscany">Tuscany</option>
-            <option value="Piedmont">Piedmont</option>
-            <option value="Sicily">Sicily</option>
-            <option value="Spain">Spain</option>
-            <option value="New Zealand">New Zealand</option>
-            <option value="Argentina">Argentina</option>
-            <option value="California">California</option>
-            <option value="Oregon">Oregon</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Occasion</label>
-          <select class="form-control" id="occasionSelect">
-            <option value="">Any occasion</option>
-            <option value="casual dinner">Casual dinner</option>
-            <option value="business dinner">Business dinner</option>
-            <option value="celebration">Celebration</option>
-            <option value="romantic evening">Romantic evening</option>
-            <option value="by the glass">By the glass</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Food pairing</label>
-          <select class="form-control" id="pairingSelect">
-            <option value="">No preference</option>
-            <option value="red meat">Red meat</option>
-            <option value="seafood">Seafood</option>
-            <option value="poultry">Poultry</option>
-            <option value="pasta or risotto">Pasta / risotto</option>
-            <option value="cheese">Cheese</option>
-            <option value="vegetarian">Vegetarian</option>
-            <option value="no food">Aperitif / no food</option>
-          </select>
+
+        <div class="image-grid" id="labelImageGrid" style="display:none"></div>
+        <div class="page-count" id="labelPageCount" style="display:none">
+          <span class="page-count-dot"></span>
+          <span id="labelPageCountText"></span>
         </div>
       </div>
 
-      <div class="form-group" style="margin-top:16px">
-        <label class="form-label">Anything else</label>
-        <textarea class="form-control" id="notesInput" placeholder="e.g. I love Pinot Noir but hate anything too tannic. Surprise us."></textarea>
+      <div class="panel">
+        <div class="panel-title">Anything Specific?</div>
+        <div class="form-group">
+          <label class="form-label">Optional</label>
+          <textarea class="form-control" id="labelNotesInput" placeholder="e.g. Is this a good drinking window? What should I pair it with?"></textarea>
+        </div>
       </div>
+
+      <button class="btn-primary" id="labelSubmitBtn" disabled onclick="submitLabelScan()">
+        Identify This Wine
+      </button>
     </div>
-
-    <button class="btn-primary" id="submitBtn" disabled onclick="submitForm()">
-      Consult the Sommelier
-    </button>
   </div>
 
   <!-- Loading -->
   <div class="loading" id="loading">
     <div class="flame">🕯</div>
-    <div class="loading-title">Reading the list</div>
-    <div class="loading-sub">Considering your palate. This takes a moment.</div>
+    <div class="loading-title" id="loadingTitle">Reading the list</div>
+    <div class="loading-sub" id="loadingSub">Considering your palate. This takes a moment.</div>
   </div>
 
   <!-- Results -->
   <div class="results" id="results">
-    <div class="results-eyebrow">Sommelier's selection</div>
-    <h2 class="results-h2">Our Recommendations</h2>
+    <div class="results-eyebrow" id="resultsEyebrow">Sommelier's selection</div>
+    <h2 class="results-h2" id="resultsH2">Our Recommendations</h2>
     <p class="results-meta" id="resultsMeta"></p>
     <div id="wineCards"></div>
     <div class="sommelier-note" id="sommelierNote" style="display:none">
-      <div class="sommelier-note-label">A note from the sommelier</div>
+      <div class="sommelier-note-label" id="sommelierNoteLabel">A note from the sommelier</div>
       <p id="sommelierNoteText"></p>
     </div>
     <button class="reset-btn" onclick="reset()">← Start a new search</button>
@@ -543,6 +612,11 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 </div>
 
 <script>
+  let currentMode = 'list';
+</script>
+
+<script>
+
   const supabaseUrl = 'https://aksjkadglsefsomeakkt.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrc2prYWRnbHNlZnNvbWVha2t0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMDcyMjYsImV4cCI6MjEwMDY4MzIyNn0.uMEHpI4bwRYYpbeioh5snddGeroH89JkPr_0A1Cy56g';
   let supabaseClient = null;
@@ -580,6 +654,186 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     e.preventDefault(); zone.classList.remove('drag');
     Array.from(e.dataTransfer.files).forEach(addImage);
   });
+
+  // --- Mode switching ---
+  function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('tabList').classList.toggle('active', mode === 'list');
+    document.getElementById('tabLabel').classList.toggle('active', mode === 'label');
+    document.getElementById('modeListPanels').style.display = mode === 'list' ? 'block' : 'none';
+    document.getElementById('modeLabelPanels').style.display = mode === 'label' ? 'block' : 'none';
+    document.getElementById('errorBox').classList.remove('show');
+  }
+
+  // --- Label photo upload (separate array, images only, no PDF) ---
+  let labelImages = [];
+
+  const labelFileInput = document.getElementById('labelFileInput');
+  labelFileInput.addEventListener('change', e => {
+    Array.from(e.target.files).forEach(addLabelImage);
+    labelFileInput.value = '';
+  });
+
+  const labelZone = document.getElementById('labelUploadZone');
+  labelZone.addEventListener('dragover', e => { e.preventDefault(); labelZone.classList.add('drag'); });
+  labelZone.addEventListener('dragleave', () => labelZone.classList.remove('drag'));
+  labelZone.addEventListener('drop', e => {
+    e.preventDefault(); labelZone.classList.remove('drag');
+    Array.from(e.dataTransfer.files).forEach(addLabelImage);
+  });
+
+  function addLabelImage(file) {
+    if (!looksLikeImage(file)) {
+      showUploadError(`"${file.name}" was not recognised as an image and was skipped.`);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_DIM = 1600;
+        let { width, height } = img;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          const scale = MAX_DIM / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+        labelImages.push({ mediaType: 'image/jpeg', base64: resizedDataUrl.split(',')[1], dataUrl: resizedDataUrl });
+        renderLabelThumbnails();
+        document.getElementById('labelSubmitBtn').disabled = false;
+      };
+      img.onerror = () => {
+        showUploadError(`"${file.name}" could not be read as an image. It may be a HEIC photo — try exporting it as JPEG first.`);
+      };
+      img.src = reader.result;
+    };
+    reader.onerror = () => showUploadError(`"${file.name}" could not be opened.`);
+    reader.readAsDataURL(file);
+  }
+
+  function removeLabelImage(i) {
+    labelImages.splice(i, 1);
+    renderLabelThumbnails();
+    document.getElementById('labelSubmitBtn').disabled = labelImages.length === 0;
+  }
+
+  function renderLabelThumbnails() {
+    const grid = document.getElementById('labelImageGrid');
+    const countEl = document.getElementById('labelPageCount');
+    const countText = document.getElementById('labelPageCountText');
+
+    if (labelImages.length === 0) {
+      grid.style.display = 'none';
+      countEl.style.display = 'none';
+      labelZone.style.display = 'block';
+      return;
+    }
+
+    labelZone.style.display = 'none';
+    grid.style.display = 'grid';
+    countEl.style.display = 'flex';
+    countText.textContent = labelImages.length === 1 ? '1 photo uploaded' : `${labelImages.length} photos uploaded`;
+
+    grid.innerHTML = '';
+    labelImages.forEach((item, i) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'image-thumb';
+      thumb.innerHTML = `
+        <img src="${item.dataUrl}" alt="Label ${i+1}">
+        <button class="image-thumb-remove" onclick="removeLabelImage(${i})">×</button>
+        <div class="image-thumb-label">${i === 0 ? 'Front' : 'Back'}</div>
+      `;
+      grid.appendChild(thumb);
+    });
+
+    const addMore = document.createElement('div');
+    addMore.className = 'add-more';
+    addMore.onclick = () => labelFileInput.click();
+    addMore.innerHTML = `<span class="add-more-icon">+</span><span class="add-more-label">Add photo</span>`;
+    grid.appendChild(addMore);
+  }
+
+  async function submitLabelScan() {
+    if (labelImages.length === 0) return;
+
+    const notes = document.getElementById('labelNotesInput').value.trim();
+
+    const fileBlocks = labelImages.map(item => ({
+      type: 'image',
+      source: { type: 'base64', media_type: item.mediaType, data: item.base64 },
+    }));
+
+    const userContent = [
+      ...fileBlocks,
+      {
+        type: 'text',
+        text: `The attached photo${labelImages.length > 1 ? 's show' : ' shows'} a wine label (front${labelImages.length > 1 ? ' and back' : ''}). Identify this specific wine as precisely as you can from the label.
+
+${notes ? `The person also asked: ${notes}` : ''}
+
+Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
+{
+  "recommendations": [
+    {
+      "name": "Full wine name including producer and vintage if visible",
+      "price": null,
+      "region": "Region or appellation",
+      "grape": "Primary grape variety or blend",
+      "style": "Brief style descriptor",
+      "description": "Two to three sentences on character, flavour profile, and typical drinking window",
+      "why": "${notes ? 'A direct answer to what was asked, or a serving/pairing suggestion if not fully answerable' : 'A serving or pairing suggestion for this wine'}"
+    }
+  ],
+  "sommelier_note": "Note the confidence of the identification if the label was unclear or partially obscured, otherwise a brief general remark."
+}`
+      }
+    ];
+
+    document.getElementById('formSection').style.display = 'none';
+    document.getElementById('errorBox').classList.remove('show');
+    document.getElementById('loadingTitle').textContent = 'Reading the label';
+    document.getElementById('loadingSub').textContent = 'Identifying the wine. This takes a moment.';
+    document.getElementById('loading').classList.add('show');
+    document.getElementById('results').classList.remove('show');
+
+    try {
+      const res = await fetch('/api/sommelier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: userContent }),
+      });
+
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.error?.message || `Error ${res.status}`);
+      }
+
+      const data = await res.json();
+      const raw = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('Could not read the response. Please try again.');
+      const parsed = JSON.parse(match[0]);
+
+      document.getElementById('resultsEyebrow').textContent = 'Label scanned';
+      document.getElementById('resultsH2').textContent = 'Wine Identified';
+      document.getElementById('sommelierNoteLabel').textContent = 'A note on this wine';
+
+      renderResults(parsed, null, null, null);
+    } catch (e) {
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('formSection').style.display = 'block';
+      const box = document.getElementById('errorBox');
+      box.textContent = e.message;
+      box.classList.add('show');
+    }
+  }
 
   function showUploadError(msg) {
     const box = document.getElementById('errorBox');
@@ -823,6 +1077,10 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       const match = raw.match(/\{[\s\S]*\}/);
       if (!match) throw new Error('Could not read the response. Please try again.');
       const parsed = JSON.parse(match[0]);
+      document.getElementById('resultsEyebrow').textContent = "Sommelier's selection";
+      document.getElementById('resultsH2').textContent = 'Our Recommendations';
+      document.getElementById('sommelierNoteLabel').textContent = 'A note from the sommelier';
+
       renderResults(parsed, budget, style, region);
     } catch (e) {
       document.getElementById('loading').classList.remove('show');
@@ -836,7 +1094,9 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
   function renderResults(data, budget, style, region) {
     document.getElementById('loading').classList.remove('show');
 
-    const meta = [`Budget up to $${budget}`, style, region].filter(Boolean).join(' · ');
+    const meta = budget
+      ? [`Budget up to $${budget}`, style, region].filter(Boolean).join(' · ')
+      : 'Identified from label photo';
     document.getElementById('resultsMeta').textContent = meta;
 
     const cards = document.getElementById('wineCards');
