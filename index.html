@@ -222,7 +222,9 @@ svg.icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
 }
 .page-count-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brass); display: inline-block; flex-shrink: 0; }
 
-/* Chip styling retained for potential future use elsewhere */
+/* Chip styling — used by the taste-profile onboarding quiz */
+.chip-group-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
 .chip {
   font-family: var(--sans); font-size: 11px; font-weight: 500;
   padding: 0 12px; min-height: 44px; display: flex; align-items: center;
@@ -234,6 +236,16 @@ svg.icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
 .chip.active {
   border-color: var(--brass); background: rgba(184,147,90,0.14); color: var(--brass-light);
 }
+
+/* Taste profile summary */
+.profile-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.profile-row:last-child { border-bottom: none; }
+.profile-row-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: var(--text-dim); text-transform: uppercase; }
+.profile-row-value { font-size: 13px; color: var(--text-primary); text-align: right; max-width: 60%; }
+.profile-row-value.empty { color: var(--text-dim); font-style: italic; }
 
 /* Form */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -604,6 +616,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     <div class="mode-tabs">
       <button class="mode-tab active" id="tabList" onclick="switchMode('list')">Wine list</button>
       <button class="mode-tab" id="tabLabel" onclick="switchMode('label')">Read a label</button>
+      <button class="mode-tab" id="tabTaste" onclick="switchMode('taste')">My taste</button>
     </div>
     <button class="kept-nav-link" onclick="showKeptBottles()">
       <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>
@@ -737,6 +750,70 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
       <div class="sticky-cta">
         <button class="btn-primary" id="labelSubmitBtn" disabled onclick="submitLabelScan()">Read This Label</button>
       </div>
+    </div>
+
+    <!-- MY TASTE MODE -->
+    <div id="modeTastePanels" style="display:none">
+
+      <!-- Onboarding quiz -->
+      <div id="tasteOnboardForm">
+        <div class="panel foil">
+          <div class="panel-title">A Few Questions</div>
+          <p style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
+            Tell me roughly what you like. This takes a minute, and it only gets sharper from here as you rate more bottles.
+          </p>
+
+          <div class="chip-group-label">Body</div>
+          <div class="chip-row" id="chipsBody"></div>
+
+          <div class="chip-group-label">Tannin</div>
+          <div class="chip-row" id="chipsTannin"></div>
+
+          <div class="chip-group-label">Sweetness</div>
+          <div class="chip-row" id="chipsSweetness"></div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Go-to grapes</label>
+              <input type="text" class="form-control" id="tasteGrapes" placeholder="e.g. Shiraz, Pinot Noir">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Go-to regions</label>
+              <input type="text" class="form-control" id="tasteRegions" placeholder="e.g. Barossa, Burgundy">
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-top:16px">
+            <div class="form-group">
+              <label class="form-label">Typical spend — low</label>
+              <input type="number" class="form-control" id="tasteBudgetLow" placeholder="$30" min="0" step="5">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Typical spend — high</label>
+              <input type="number" class="form-control" id="tasteBudgetHigh" placeholder="$150" min="0" step="5">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:16px">
+            <label class="form-label">Anything else worth knowing</label>
+            <textarea class="form-control" id="tasteNotes" placeholder="e.g. I don't get on with very oaky whites. Always happy to try something natural."></textarea>
+          </div>
+        </div>
+
+        <div class="sticky-cta">
+          <button class="btn-primary" onclick="saveTasteProfile()">Save My Taste</button>
+        </div>
+      </div>
+
+      <!-- Profile summary, shown once onboarding is complete -->
+      <div id="tasteProfileSummary" style="display:none">
+        <div class="panel foil">
+          <div class="panel-title">Your Palate, On File</div>
+          <div id="profileRows"></div>
+        </div>
+        <button class="reset-btn" onclick="editTasteProfile()">Edit my taste profile</button>
+      </div>
+
     </div>
   </div>
 
@@ -979,9 +1056,164 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     currentMode = mode;
     document.getElementById('tabList').classList.toggle('active', mode === 'list');
     document.getElementById('tabLabel').classList.toggle('active', mode === 'label');
+    document.getElementById('tabTaste').classList.toggle('active', mode === 'taste');
     document.getElementById('modeListPanels').style.display = mode === 'list' ? 'block' : 'none';
     document.getElementById('modeLabelPanels').style.display = mode === 'label' ? 'block' : 'none';
+    document.getElementById('modeTastePanels').style.display = mode === 'taste' ? 'block' : 'none';
     document.getElementById('errorBox').classList.remove('show');
+    if (mode === 'taste') loadTasteProfile();
+  }
+
+  // --- My Taste onboarding ---
+  const BODY_OPTIONS = ['Light', 'Medium', 'Full'];
+  const TANNIN_OPTIONS = ['Low', 'Medium', 'High'];
+  const SWEETNESS_OPTIONS = ['Bone dry', 'Dry', 'Off-dry', 'Sweet'];
+  let tasteSelections = { body: '', tannin: '', sweetness: '' };
+
+  function renderTasteChips(containerId, options, groupKey) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = options.map(opt =>
+      `<button type="button" class="chip" data-value="${esc(opt)}" onclick="toggleTasteChip('${groupKey}', this)">${esc(opt)}</button>`
+    ).join('');
+  }
+  renderTasteChips('chipsBody', BODY_OPTIONS, 'body');
+  renderTasteChips('chipsTannin', TANNIN_OPTIONS, 'tannin');
+  renderTasteChips('chipsSweetness', SWEETNESS_OPTIONS, 'sweetness');
+
+  function toggleTasteChip(group, btn) {
+    const container = btn.parentElement;
+    const wasActive = btn.classList.contains('active');
+    Array.from(container.children).forEach(c => c.classList.remove('active'));
+    if (!wasActive) {
+      btn.classList.add('active');
+      tasteSelections[group] = btn.dataset.value;
+    } else {
+      tasteSelections[group] = '';
+    }
+  }
+
+  function setTasteChipActive(containerId, value) {
+    const el = document.getElementById(containerId);
+    Array.from(el.children).forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.value === value);
+    });
+  }
+
+  async function loadTasteProfile() {
+    if (!supabaseClient || !currentUser) {
+      document.getElementById('tasteOnboardForm').style.display = 'block';
+      document.getElementById('tasteProfileSummary').style.display = 'none';
+      return;
+    }
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('taste_profile')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data && data.onboarded) {
+        showTasteSummary(data);
+      } else {
+        showTasteForm(data);
+      }
+    } catch (e) {
+      console.error('[taste] Could not load profile', e);
+      document.getElementById('tasteOnboardForm').style.display = 'block';
+      document.getElementById('tasteProfileSummary').style.display = 'none';
+    }
+  }
+
+  function showTasteForm(existing) {
+    document.getElementById('tasteOnboardForm').style.display = 'block';
+    document.getElementById('tasteProfileSummary').style.display = 'none';
+
+    if (existing) {
+      tasteSelections.body = existing.body_pref || '';
+      tasteSelections.tannin = existing.tannin_pref || '';
+      tasteSelections.sweetness = existing.sweetness_pref || '';
+      setTasteChipActive('chipsBody', tasteSelections.body);
+      setTasteChipActive('chipsTannin', tasteSelections.tannin);
+      setTasteChipActive('chipsSweetness', tasteSelections.sweetness);
+      document.getElementById('tasteGrapes').value = existing.favorite_grapes || '';
+      document.getElementById('tasteRegions').value = existing.favorite_regions || '';
+      document.getElementById('tasteBudgetLow').value = existing.budget_low || '';
+      document.getElementById('tasteBudgetHigh').value = existing.budget_high || '';
+      document.getElementById('tasteNotes').value = existing.notes || '';
+    }
+  }
+
+  function showTasteSummary(profile) {
+    document.getElementById('tasteOnboardForm').style.display = 'none';
+    document.getElementById('tasteProfileSummary').style.display = 'block';
+
+    const rows = [
+      ['Body', profile.body_pref],
+      ['Tannin', profile.tannin_pref],
+      ['Sweetness', profile.sweetness_pref],
+      ['Go-to grapes', profile.favorite_grapes],
+      ['Go-to regions', profile.favorite_regions],
+      ['Typical spend', (profile.budget_low || profile.budget_high) ? `$${profile.budget_low || '0'} – $${profile.budget_high || '?'}` : null],
+      ['Notes', profile.notes],
+    ];
+
+    document.getElementById('profileRows').innerHTML = rows.map(([label, value]) => `
+      <div class="profile-row">
+        <span class="profile-row-label">${esc(label)}</span>
+        <span class="profile-row-value ${value ? '' : 'empty'}">${value ? esc(value) : 'Not set'}</span>
+      </div>
+    `).join('');
+  }
+
+  async function editTasteProfile() {
+    if (!supabaseClient || !currentUser) {
+      showTasteForm(null);
+      return;
+    }
+    try {
+      const { data, error } = await supabaseClient
+        .from('taste_profile')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+      if (error) throw error;
+      showTasteForm(data);
+    } catch (e) {
+      showTasteForm(null);
+    }
+  }
+
+  async function saveTasteProfile() {
+    if (!supabaseClient || !currentUser) {
+      showUploadError('Sign in to save your taste profile.');
+      return;
+    }
+
+    const payload = {
+      user_id: currentUser.id,
+      body_pref: tasteSelections.body || null,
+      tannin_pref: tasteSelections.tannin || null,
+      sweetness_pref: tasteSelections.sweetness || null,
+      favorite_grapes: document.getElementById('tasteGrapes').value.trim() || null,
+      favorite_regions: document.getElementById('tasteRegions').value.trim() || null,
+      budget_low: document.getElementById('tasteBudgetLow').value ? Number(document.getElementById('tasteBudgetLow').value) : null,
+      budget_high: document.getElementById('tasteBudgetHigh').value ? Number(document.getElementById('tasteBudgetHigh').value) : null,
+      notes: document.getElementById('tasteNotes').value.trim() || null,
+      onboarded: true,
+      updated_at: new Date().toISOString(),
+    };
+
+    try {
+      const { error } = await supabaseClient.from('taste_profile').upsert(payload);
+      if (error) throw error;
+      showTasteSummary(payload);
+    } catch (e) {
+      showUploadError('Could not save your taste profile. Please try again.');
+      console.error('[taste] save failed', e);
+    }
   }
 
   // --- Label photo upload ---
