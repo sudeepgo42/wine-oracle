@@ -222,9 +222,7 @@ svg.icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
 }
 .page-count-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brass); display: inline-block; flex-shrink: 0; }
 
-/* Chip pickers */
-.chip-group-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
-.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+/* Chip styling retained for potential future use elsewhere */
 .chip {
   font-family: var(--sans); font-size: 11px; font-weight: 500;
   padding: 0 12px; min-height: 44px; display: flex; align-items: center;
@@ -238,6 +236,8 @@ svg.icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
 }
 
 /* Form */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; }
 .form-control {
@@ -250,6 +250,12 @@ svg.icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
 }
 .form-control:focus { border-color: var(--brass); box-shadow: 0 0 0 3px rgba(184,147,90,0.12); }
 textarea.form-control { resize: vertical; min-height: 72px; line-height: 1.55; }
+select.form-control {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23665a70'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+  background-color: var(--bg-deep); padding-right: 32px; cursor: pointer;
+}
+select.form-control option { background: var(--bg-card); color: var(--text-primary); }
 
 /* Budget */
 .budget-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -551,6 +557,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
       <div class="login-error" id="loginError"></div>
     </div>
     <div class="login-sent" id="loginSent">Check your email and tap the link. This tab will sign in on its own once you do.</div>
+    <button class="reset-btn" id="betaTestBtn" onclick="betaTestSignIn()" style="margin-top:18px">BETA TEST — skip sign-in</button>
   </div>
 </div>
 
@@ -646,17 +653,43 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
             <span class="budget-value" id="budgetDisplay">$120</span>
             <span class="budget-hint">max per bottle</span>
           </div>
-          <input type="range" id="budgetSlider" min="20" max="500" step="5" value="120" oninput="updateBudget(this)">
-          <div class="budget-ends"><span>$20</span><span>$500</span></div>
+          <input type="range" id="budgetSlider" min="20" max="1500" step="5" value="120" oninput="updateBudget(this)">
+          <div class="budget-ends"><span>$20</span><span>$1500</span></div>
         </div>
 
-        <div class="chip-group-label">Style</div>
-        <div class="chip-row" id="styleChips"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Style</label>
+            <select class="form-control" id="styleSelect">
+              <option value="">Any style</option>
+              <option value="Bold red">Bold red</option>
+              <option value="Medium red">Medium red</option>
+              <option value="Light red">Light red</option>
+              <option value="Crisp white">Crisp white</option>
+              <option value="Oaked white">Oaked white</option>
+              <option value="Aromatic white">Aromatic white</option>
+              <option value="Rosé">Rosé</option>
+              <option value="Sparkling">Sparkling</option>
+              <option value="Natural">Natural</option>
+              <option value="Dessert/fortified">Dessert/fortified</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Food</label>
+            <select class="form-control" id="pairingSelect">
+              <option value="">No preference</option>
+              <option value="Red meat">Red meat</option>
+              <option value="Seafood">Seafood</option>
+              <option value="Poultry">Poultry</option>
+              <option value="Pasta/risotto">Pasta/risotto</option>
+              <option value="Cheese">Cheese</option>
+              <option value="Vegetarian">Vegetarian</option>
+              <option value="No food">No food</option>
+            </select>
+          </div>
+        </div>
 
-        <div class="chip-group-label">Food</div>
-        <div class="chip-row" id="pairingChips"></div>
-
-        <div class="form-group">
+        <div class="form-group" style="margin-top:16px">
           <label class="form-label">Anything else — region, occasion, whatever matters</label>
           <textarea class="form-control" id="notesInput" placeholder="e.g. Barossa if they've got it. Celebrating tonight. I love Pinot but hate anything too tannic."></textarea>
         </div>
@@ -840,6 +873,33 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     }
   }
 
+  async function betaTestSignIn() {
+    const errorEl = document.getElementById('loginError');
+    errorEl.classList.remove('show');
+
+    if (!supabaseClient) {
+      errorEl.textContent = 'Sign-in is temporarily unavailable. Please try again shortly.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    const btn = document.getElementById('betaTestBtn');
+    btn.disabled = true;
+    btn.textContent = 'Signing in...';
+
+    try {
+      const { data, error } = await supabaseClient.auth.signInAnonymously();
+      if (error) throw error;
+      currentUser = data.user;
+      showLoggedIn();
+    } catch (e) {
+      errorEl.textContent = e.message || 'Could not start a test session. Make sure Anonymous Sign-Ins are enabled in Supabase.';
+      errorEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'BETA TEST — skip sign-in';
+    }
+  }
+
   async function signOut() {
     if (supabaseClient) await supabaseClient.auth.signOut();
     currentUser = null;
@@ -888,40 +948,17 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   const apiKey = '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';
 
   function updateBudget(el) {
-    const pct = ((el.value - 20) / 480) * 100;
+    const min = Number(el.min);
+    const max = Number(el.max);
+    const pct = ((el.value - min) / (max - min)) * 100;
     el.style.setProperty('--pct', pct + '%');
     document.getElementById('budgetDisplay').textContent = '$' + el.value;
   }
   updateBudget(document.getElementById('budgetSlider'));
 
-  // --- Chip pickers ---
-  const STYLE_OPTIONS = ['Bold red','Medium red','Light red','Crisp white','Oaked white','Aromatic white','Rosé','Sparkling','Natural','Dessert/fortified'];
-  const PAIRING_OPTIONS = ['Red meat','Seafood','Poultry','Pasta/risotto','Cheese','Vegetarian','No food'];
-  let selectedStyle = '';
-  let selectedPairing = '';
-
-  function renderChips(containerId, options, groupName) {
-    const el = document.getElementById(containerId);
-    el.innerHTML = options.map(opt =>
-      `<button type="button" class="chip" data-value="${esc(opt)}" onclick="toggleChip('${groupName}', this)">${esc(opt)}</button>`
-    ).join('');
-  }
-  renderChips('styleChips', STYLE_OPTIONS, 'style');
-  renderChips('pairingChips', PAIRING_OPTIONS, 'pairing');
-
-  function toggleChip(group, btn) {
-    const container = btn.parentElement;
-    const wasActive = btn.classList.contains('active');
-    Array.from(container.children).forEach(c => c.classList.remove('active'));
-    if (!wasActive) {
-      btn.classList.add('active');
-      if (group === 'style') selectedStyle = btn.dataset.value;
-      if (group === 'pairing') selectedPairing = btn.dataset.value;
-    } else {
-      if (group === 'style') selectedStyle = '';
-      if (group === 'pairing') selectedPairing = '';
-    }
-  }
+  // --- Style / Food preferences (dropdowns) ---
+  function getSelectedStyle() { return document.getElementById('styleSelect').value; }
+  function getSelectedPairing() { return document.getElementById('pairingSelect').value; }
 
   const fileInput = document.getElementById('fileInput');
   fileInput.addEventListener('change', e => {
@@ -1255,12 +1292,14 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
     if (images.length === 0) return;
 
     const budget = document.getElementById('budgetSlider').value;
+    const style = getSelectedStyle();
+    const pairing = getSelectedPairing();
     const notes = document.getElementById('notesInput').value.trim();
 
     const prefs = [
       `Budget: up to $${budget} AUD per bottle`,
-      selectedStyle && `Style preference: ${selectedStyle}`,
-      selectedPairing && `Food pairing: ${selectedPairing}`,
+      style && `Style preference: ${style}`,
+      pairing && `Food pairing: ${pairing}`,
       notes && `Additional notes (may include region or occasion): ${notes}`,
     ].filter(Boolean).join('\n');
 
@@ -1336,6 +1375,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
 
       renderResults(parsed, {
         budgetLabel: `Budget up to $${budget}`,
+        styleLabel: style,
         isLabelMode: false,
       });
     } catch (e) {
@@ -1357,7 +1397,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
 
     const metaParts = [];
     if (meta.budgetLabel) metaParts.push(meta.budgetLabel);
-    if (selectedStyle && !meta.isLabelMode) metaParts.push(selectedStyle);
+    if (meta.styleLabel && !meta.isLabelMode) metaParts.push(meta.styleLabel);
     document.getElementById('resultsMeta').textContent = meta.isLabelMode
       ? 'Identified from your photo'
       : metaParts.join(' · ');
