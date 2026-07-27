@@ -620,7 +620,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     </div>
     <button class="kept-nav-link" onclick="showKeptBottles()">
       <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>
-      Kept
+      Favourites
     </button>
   </div>
 
@@ -700,10 +700,21 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
               <option value="No food">No food</option>
             </select>
           </div>
+          <div class="form-group">
+            <label class="form-label">Occasion</label>
+            <select class="form-control" id="occasionSelect">
+              <option value="">Any occasion</option>
+              <option value="Casual dinner">Casual dinner</option>
+              <option value="Business dinner">Business dinner</option>
+              <option value="Celebration">Celebration</option>
+              <option value="Romantic evening">Romantic evening</option>
+              <option value="By the glass">By the glass</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-group" style="margin-top:16px">
-          <label class="form-label">Anything else — region, occasion, whatever matters</label>
+          <label class="form-label">Anything else — region, whatever matters</label>
           <textarea class="form-control" id="notesInput" placeholder="e.g. Barossa if they've got it. Celebrating tonight. I love Pinot but hate anything too tannic."></textarea>
         </div>
       </div>
@@ -760,43 +771,82 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
         <div class="panel foil">
           <div class="panel-title">A Few Questions</div>
           <p style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
-            Tell me roughly what you like. This takes a minute, and it only gets sharper from here as you rate more bottles.
+            The more you tell me, the better I get at spotting the right bottle on any list. Takes a few minutes, and it only sharpens further as you rate more wines.
           </p>
 
+          <div class="form-group">
+            <label class="form-label">Typical spend — low</label>
+            <input type="number" class="form-control" id="tasteBudgetLow" placeholder="$30" min="0" step="5">
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label">Typical spend — high</label>
+            <input type="number" class="form-control" id="tasteBudgetHigh" placeholder="$150" min="0" step="5">
+          </div>
+        </div>
+
+        <div class="panel foil">
+          <div class="panel-title">Red Wine</div>
+
           <div class="chip-group-label">Body</div>
-          <div class="chip-row" id="chipsBody"></div>
+          <div class="chip-row" id="chipsRedBody"></div>
 
           <div class="chip-group-label">Tannin</div>
-          <div class="chip-row" id="chipsTannin"></div>
+          <div class="chip-row" id="chipsRedTannin"></div>
 
-          <div class="chip-group-label">Sweetness</div>
-          <div class="chip-row" id="chipsSweetness"></div>
+          <div class="chip-group-label">Oak</div>
+          <div class="chip-row" id="chipsRedOak"></div>
 
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Go-to grapes</label>
-              <input type="text" class="form-control" id="tasteGrapes" placeholder="e.g. Shiraz, Pinot Noir">
+              <label class="form-label">Go-to red grapes</label>
+              <input type="text" class="form-control" id="tasteRedGrapes" placeholder="e.g. Shiraz, Pinot Noir, Nebbiolo">
             </div>
             <div class="form-group">
-              <label class="form-label">Go-to regions</label>
-              <input type="text" class="form-control" id="tasteRegions" placeholder="e.g. Barossa, Burgundy">
-            </div>
-          </div>
-
-          <div class="form-grid" style="margin-top:16px">
-            <div class="form-group">
-              <label class="form-label">Typical spend — low</label>
-              <input type="number" class="form-control" id="tasteBudgetLow" placeholder="$30" min="0" step="5">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Typical spend — high</label>
-              <input type="number" class="form-control" id="tasteBudgetHigh" placeholder="$150" min="0" step="5">
+              <label class="form-label">Go-to red regions</label>
+              <input type="text" class="form-control" id="tasteRedRegions" placeholder="e.g. Barossa, Rhône, Piedmont">
             </div>
           </div>
 
           <div class="form-group" style="margin-top:16px">
-            <label class="form-label">Anything else worth knowing</label>
-            <textarea class="form-control" id="tasteNotes" placeholder="e.g. I don't get on with very oaky whites. Always happy to try something natural."></textarea>
+            <label class="form-label">Anything else about reds</label>
+            <textarea class="form-control" id="tasteRedNotes" placeholder="e.g. I love a savoury, earthy red. Not keen on jammy or overly fruit-forward styles."></textarea>
+          </div>
+        </div>
+
+        <div class="panel foil">
+          <div class="panel-title">White Wine</div>
+
+          <div class="chip-group-label">Body</div>
+          <div class="chip-row" id="chipsWhiteBody"></div>
+
+          <div class="chip-group-label">Sweetness</div>
+          <div class="chip-row" id="chipsWhiteSweetness"></div>
+
+          <div class="chip-group-label">Oak</div>
+          <div class="chip-row" id="chipsWhiteOak"></div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Go-to white grapes</label>
+              <input type="text" class="form-control" id="tasteWhiteGrapes" placeholder="e.g. Riesling, Chardonnay, Sauvignon Blanc">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Go-to white regions</label>
+              <input type="text" class="form-control" id="tasteWhiteRegions" placeholder="e.g. Clare Valley, Chablis, Marlborough">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:16px">
+            <label class="form-label">Anything else about whites</label>
+            <textarea class="form-control" id="tasteWhiteNotes" placeholder="e.g. I don't get on with heavily oaked Chardonnay. Always happy to try something crisp and mineral."></textarea>
+          </div>
+        </div>
+
+        <div class="panel foil">
+          <div class="panel-title">Anything Else</div>
+          <div class="form-group">
+            <label class="form-label">Sparkling, rosé, dessert wine, anything general</label>
+            <textarea class="form-control" id="tasteNotes" placeholder="e.g. Always up for Champagne. Not a fan of overly sweet dessert wines."></textarea>
           </div>
         </div>
 
@@ -847,13 +897,12 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     <button class="reset-btn" onclick="reset()">← Another list</button>
   </div>
 
-  <!-- Kept Bottles -->
+  <!-- Favourites -->
   <div class="kept-screen" id="keptScreen">
     <div class="results-eyebrow">Your reference</div>
-    <h2 class="results-h2">Kept Bottles</h2>
+    <h2 class="results-h2">Favourites</h2>
     <p class="results-meta">Everything you've kept, newest first.</p>
     <div id="keptList"></div>
-    <button class="reset-btn" onclick="hideKeptBottles()">← Back</button>
   </div>
 
   <footer class="footer">Curated by Shamus Cooper</footer>
@@ -1061,6 +1110,9 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     document.getElementById('modeLabelPanels').style.display = mode === 'label' ? 'block' : 'none';
     document.getElementById('modeTastePanels').style.display = mode === 'taste' ? 'block' : 'none';
     document.getElementById('errorBox').classList.remove('show');
+    document.getElementById('formSection').style.display = 'block';
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('keptScreen').classList.remove('show');
     if (mode === 'taste') loadTasteProfile();
   }
 
@@ -1068,7 +1120,12 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   const BODY_OPTIONS = ['Light', 'Medium', 'Full'];
   const TANNIN_OPTIONS = ['Low', 'Medium', 'High'];
   const SWEETNESS_OPTIONS = ['Bone dry', 'Dry', 'Off-dry', 'Sweet'];
-  let tasteSelections = { body: '', tannin: '', sweetness: '' };
+  const OAK_OPTIONS = ['Unoaked', 'Lightly oaked', 'Heavily oaked'];
+
+  let tasteSelections = {
+    redBody: '', redTannin: '', redOak: '',
+    whiteBody: '', whiteSweetness: '', whiteOak: '',
+  };
 
   function renderTasteChips(containerId, options, groupKey) {
     const el = document.getElementById(containerId);
@@ -1076,9 +1133,12 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
       `<button type="button" class="chip" data-value="${esc(opt)}" onclick="toggleTasteChip('${groupKey}', this)">${esc(opt)}</button>`
     ).join('');
   }
-  renderTasteChips('chipsBody', BODY_OPTIONS, 'body');
-  renderTasteChips('chipsTannin', TANNIN_OPTIONS, 'tannin');
-  renderTasteChips('chipsSweetness', SWEETNESS_OPTIONS, 'sweetness');
+  renderTasteChips('chipsRedBody', BODY_OPTIONS, 'redBody');
+  renderTasteChips('chipsRedTannin', TANNIN_OPTIONS, 'redTannin');
+  renderTasteChips('chipsRedOak', OAK_OPTIONS, 'redOak');
+  renderTasteChips('chipsWhiteBody', BODY_OPTIONS, 'whiteBody');
+  renderTasteChips('chipsWhiteSweetness', SWEETNESS_OPTIONS, 'whiteSweetness');
+  renderTasteChips('chipsWhiteOak', OAK_OPTIONS, 'whiteOak');
 
   function toggleTasteChip(group, btn) {
     const container = btn.parentElement;
@@ -1132,14 +1192,26 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     document.getElementById('tasteProfileSummary').style.display = 'none';
 
     if (existing) {
-      tasteSelections.body = existing.body_pref || '';
-      tasteSelections.tannin = existing.tannin_pref || '';
-      tasteSelections.sweetness = existing.sweetness_pref || '';
-      setTasteChipActive('chipsBody', tasteSelections.body);
-      setTasteChipActive('chipsTannin', tasteSelections.tannin);
-      setTasteChipActive('chipsSweetness', tasteSelections.sweetness);
-      document.getElementById('tasteGrapes').value = existing.favorite_grapes || '';
-      document.getElementById('tasteRegions').value = existing.favorite_regions || '';
+      tasteSelections.redBody = existing.red_body || '';
+      tasteSelections.redTannin = existing.red_tannin || '';
+      tasteSelections.redOak = existing.red_oak || '';
+      tasteSelections.whiteBody = existing.white_body || '';
+      tasteSelections.whiteSweetness = existing.white_sweetness || '';
+      tasteSelections.whiteOak = existing.white_oak || '';
+
+      setTasteChipActive('chipsRedBody', tasteSelections.redBody);
+      setTasteChipActive('chipsRedTannin', tasteSelections.redTannin);
+      setTasteChipActive('chipsRedOak', tasteSelections.redOak);
+      setTasteChipActive('chipsWhiteBody', tasteSelections.whiteBody);
+      setTasteChipActive('chipsWhiteSweetness', tasteSelections.whiteSweetness);
+      setTasteChipActive('chipsWhiteOak', tasteSelections.whiteOak);
+
+      document.getElementById('tasteRedGrapes').value = existing.red_grapes || '';
+      document.getElementById('tasteRedRegions').value = existing.red_regions || '';
+      document.getElementById('tasteRedNotes').value = existing.red_notes || '';
+      document.getElementById('tasteWhiteGrapes').value = existing.white_grapes || '';
+      document.getElementById('tasteWhiteRegions').value = existing.white_regions || '';
+      document.getElementById('tasteWhiteNotes').value = existing.white_notes || '';
       document.getElementById('tasteBudgetLow').value = existing.budget_low || '';
       document.getElementById('tasteBudgetHigh').value = existing.budget_high || '';
       document.getElementById('tasteNotes').value = existing.notes || '';
@@ -1151,13 +1223,20 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     document.getElementById('tasteProfileSummary').style.display = 'block';
 
     const rows = [
-      ['Body', profile.body_pref],
-      ['Tannin', profile.tannin_pref],
-      ['Sweetness', profile.sweetness_pref],
-      ['Go-to grapes', profile.favorite_grapes],
-      ['Go-to regions', profile.favorite_regions],
       ['Typical spend', (profile.budget_low || profile.budget_high) ? `$${profile.budget_low || '0'} – $${profile.budget_high || '?'}` : null],
-      ['Notes', profile.notes],
+      ['Red — body', profile.red_body],
+      ['Red — tannin', profile.red_tannin],
+      ['Red — oak', profile.red_oak],
+      ['Red — grapes', profile.red_grapes],
+      ['Red — regions', profile.red_regions],
+      ['Red — notes', profile.red_notes],
+      ['White — body', profile.white_body],
+      ['White — sweetness', profile.white_sweetness],
+      ['White — oak', profile.white_oak],
+      ['White — grapes', profile.white_grapes],
+      ['White — regions', profile.white_regions],
+      ['White — notes', profile.white_notes],
+      ['General notes', profile.notes],
     ];
 
     document.getElementById('profileRows').innerHTML = rows.map(([label, value]) => `
@@ -1194,11 +1273,18 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
     const payload = {
       user_id: currentUser.id,
-      body_pref: tasteSelections.body || null,
-      tannin_pref: tasteSelections.tannin || null,
-      sweetness_pref: tasteSelections.sweetness || null,
-      favorite_grapes: document.getElementById('tasteGrapes').value.trim() || null,
-      favorite_regions: document.getElementById('tasteRegions').value.trim() || null,
+      red_body: tasteSelections.redBody || null,
+      red_tannin: tasteSelections.redTannin || null,
+      red_oak: tasteSelections.redOak || null,
+      red_grapes: document.getElementById('tasteRedGrapes').value.trim() || null,
+      red_regions: document.getElementById('tasteRedRegions').value.trim() || null,
+      red_notes: document.getElementById('tasteRedNotes').value.trim() || null,
+      white_body: tasteSelections.whiteBody || null,
+      white_sweetness: tasteSelections.whiteSweetness || null,
+      white_oak: tasteSelections.whiteOak || null,
+      white_grapes: document.getElementById('tasteWhiteGrapes').value.trim() || null,
+      white_regions: document.getElementById('tasteWhiteRegions').value.trim() || null,
+      white_notes: document.getElementById('tasteWhiteNotes').value.trim() || null,
       budget_low: document.getElementById('tasteBudgetLow').value ? Number(document.getElementById('tasteBudgetLow').value) : null,
       budget_high: document.getElementById('tasteBudgetHigh').value ? Number(document.getElementById('tasteBudgetHigh').value) : null,
       notes: document.getElementById('tasteNotes').value.trim() || null,
@@ -1526,13 +1612,15 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
     const budget = document.getElementById('budgetSlider').value;
     const style = getSelectedStyle();
     const pairing = getSelectedPairing();
+    const occasion = document.getElementById('occasionSelect').value;
     const notes = document.getElementById('notesInput').value.trim();
 
     const prefs = [
       `Budget: up to $${budget} AUD per bottle`,
       style && `Style preference: ${style}`,
       pairing && `Food pairing: ${pairing}`,
-      notes && `Additional notes (may include region or occasion): ${notes}`,
+      occasion && `Occasion: ${occasion}`,
+      notes && `Additional notes (may include region): ${notes}`,
     ].filter(Boolean).join('\n');
 
     const fileBlocks = images.map(item => {
@@ -1970,11 +2058,6 @@ If nothing credible is found for this exact wine, set found to false and leave o
     } catch (e) {
       listEl.innerHTML = '<div class="kept-empty">Could not load your kept bottles right now.</div>';
     }
-  }
-
-  function hideKeptBottles() {
-    document.getElementById('keptScreen').classList.remove('show');
-    document.getElementById('formSection').style.display = 'block';
   }
 
   function esc(s) {
