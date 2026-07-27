@@ -381,6 +381,10 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   border: 1px solid rgba(184,147,90,0.18); border-radius: var(--radius-sm);
   padding: 3px 9px; text-transform: uppercase;
 }
+.tag.glass-tag {
+  color: var(--bordeaux-light); background: rgba(156,58,77,0.12);
+  border-color: rgba(156,58,77,0.35); font-weight: 600;
+}
 .wine-why { font-size: 13px; line-height: 1.75; color: var(--text-primary); margin-bottom: 10px; }
 .wine-card.hero .wine-why { font-size: 14px; }
 .wine-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 6px; }
@@ -1653,12 +1657,15 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
 
 ${prefs}
 
+Many wine lists offer wines both by the glass and by the bottle. Prioritise full bottles at or under the stated budget. Only include a by-the-glass option if it is a genuinely excellent match worth calling out on its own merits — do not include a glass pour just to fill out the list. Whichever you recommend, set "serving" to "bottle" or "glass" accurately based on what is actually being recommended and at what price on the list.
+
 Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
 {
   "recommendations": [
     {
       "name": "Full wine name as it appears on the list",
-      "price": "Price as listed",
+      "price": "Price as listed, for the serving type given (bottle or glass price)",
+      "serving": "bottle or glass",
       "region": "Region or appellation",
       "grape": "Primary grape variety or blend",
       "style": "Brief style descriptor",
@@ -1759,6 +1766,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
             ${renderConfidenceMeter(meta.confidence, meta.confidenceReason)}
           `;
         } else {
+          const isGlass = wine.serving && wine.serving.toLowerCase() === 'glass';
           topBlock = `
             ${isHero ? '<div class="hero-label">MY PICK OF THE LIST</div>' : ''}
             <div class="wine-top">
@@ -1766,6 +1774,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
               ${wine.price ? `<div class="wine-price">${esc(wine.price)}</div>` : ''}
             </div>
             <div class="wine-meta">
+              ${isGlass ? `<span class="tag glass-tag">By the glass</span>` : ''}
               ${wine.region ? `<span class="tag">${esc(wine.region)}</span>` : ''}
               ${wine.grape ? `<span class="tag">${esc(wine.grape)}</span>` : ''}
               ${wine.style ? `<span class="tag">${esc(wine.style)}</span>` : ''}
