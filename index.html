@@ -539,22 +539,36 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   display: none; font-size: 12px; color: #e08888; margin-top: 4px;
 }
 .login-error.show { display: block; }
-.logout-link {
-  position: fixed; top: 20px; right: 20px; z-index: 5;
-  font-family: var(--sans); font-size: 11px; font-weight: 500;
-  color: var(--text-dim); background: rgba(18,10,23,0.7);
-  border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: 6px 12px; cursor: pointer; transition: all 0.2s;
+.settings-gear-btn {
+  position: fixed; top: 20px; left: 20px; z-index: 5;
+  width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+  background: rgba(18,10,23,0.7); border: 1px solid var(--border); border-radius: 50%;
+  color: var(--text-dim); cursor: pointer; transition: all 0.2s;
 }
-.logout-link:hover { color: var(--brass-light); border-color: var(--border-hover); }
-.passkey-setup-link {
-  position: fixed; top: 58px; right: 20px; z-index: 5;
-  font-family: var(--sans); font-size: 11px; font-weight: 500;
-  color: var(--text-dim); background: rgba(18,10,23,0.7);
-  border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: 6px 12px; cursor: pointer; transition: all 0.2s;
+.settings-gear-btn:hover { color: var(--brass-light); border-color: var(--border-hover); }
+
+.settings-screen { display: none; }
+.settings-screen.show { display: block; animation: fadeUp 0.4s ease both; }
+.settings-account-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
 }
-.passkey-setup-link:hover { color: var(--brass-light); border-color: var(--border-hover); }
+.settings-account-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: var(--text-dim); text-transform: uppercase; }
+.settings-account-value { font-size: 13px; color: var(--text-primary); }
+.settings-row-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 0; border: none; border-bottom: 1px solid var(--border);
+  background: none; color: var(--text-primary); font-family: var(--sans);
+  font-size: 13px; font-weight: 500; cursor: pointer; text-align: left;
+  transition: color 0.15s;
+}
+.settings-row-btn:last-child { border-bottom: none; }
+.settings-row-btn:hover { color: var(--brass-light); }
+.settings-row-btn .icon { color: var(--text-dim); }
+.settings-row-btn:hover .icon { color: var(--brass-light); }
+.settings-row-hint { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.settings-row-btn.danger { color: var(--bordeaux-light); }
+.settings-row-btn.danger:hover { color: #c2596d; }
 
 /* Footer */
 .footer {
@@ -619,8 +633,12 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 </div>
 
 <!-- Logout -->
-<button class="logout-link" id="logoutLink" style="display:none" onclick="signOut()">Sign out</button>
-<button class="passkey-setup-link" id="passkeySetupLink" style="display:none" onclick="registerPasskeyHandler()">Set up a Passkey</button>
+<button class="settings-gear-btn" id="settingsGearBtn" style="display:none" onclick="showSettings()" aria-label="Settings">
+  <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+</button>
 
 <div class="wrap" id="appWrap" style="display:none">
 
@@ -945,6 +963,52 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     <div id="keptList"></div>
   </div>
 
+  <!-- Settings -->
+  <div class="settings-screen" id="settingsScreen">
+    <div class="results-eyebrow">Account</div>
+    <h2 class="results-h2">Settings</h2>
+
+    <div class="panel foil" style="margin-top:20px">
+      <div class="settings-account-row">
+        <span class="settings-account-label">Signed in as</span>
+        <span class="settings-account-value" id="settingsAccountEmail">—</span>
+      </div>
+    </div>
+
+    <div class="panel foil">
+      <button class="settings-row-btn" id="settingsPasskeyBtn" onclick="registerPasskeyHandler()">
+        <span>
+          Set up a Passkey
+          <div class="settings-row-hint" id="settingsPasskeyHint">Sign in next time with Face ID, Touch ID, or your screen lock.</div>
+        </span>
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <button class="settings-row-btn" onclick="switchMode('taste')">
+        <span>
+          Edit My Taste Profile
+          <div class="settings-row-hint">Update your red and white preferences.</div>
+        </span>
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <button class="settings-row-btn" onclick="showKeptBottles()">
+        <span>
+          View Favourites
+          <div class="settings-row-hint">Every wine you've rated or kept.</div>
+        </span>
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+
+    <div class="panel foil">
+      <button class="settings-row-btn danger" onclick="signOut()">
+        <span>Sign Out</span>
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </div>
+  </div>
+
   <footer class="footer">Curated by Shamus Cooper</footer>
 </div>
 
@@ -980,17 +1044,15 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     document.getElementById('loginGate').style.display = 'none';
     document.getElementById('magicLandedGate').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
-    document.getElementById('logoutLink').style.display = 'block';
-    const canSetUpPasskey = currentUser && !currentUser.is_anonymous;
-    document.getElementById('passkeySetupLink').style.display = canSetUpPasskey ? 'block' : 'none';
+    document.getElementById('settingsGearBtn').style.display = 'flex';
   }
 
   function showLoggedOut() {
     document.getElementById('loginGate').style.display = 'flex';
     document.getElementById('magicLandedGate').style.display = 'none';
     document.getElementById('appWrap').style.display = 'none';
-    document.getElementById('logoutLink').style.display = 'none';
-    document.getElementById('passkeySetupLink').style.display = 'none';
+    document.getElementById('settingsGearBtn').style.display = 'none';
+    document.getElementById('settingsScreen').classList.remove('show');
     document.getElementById('loginSent').classList.remove('show');
     document.getElementById('loginForm').style.display = 'flex';
   }
@@ -999,8 +1061,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     document.getElementById('loginGate').style.display = 'none';
     document.getElementById('magicLandedGate').style.display = 'flex';
     document.getElementById('appWrap').style.display = 'none';
-    document.getElementById('logoutLink').style.display = 'none';
-    document.getElementById('passkeySetupLink').style.display = 'none';
+    document.getElementById('settingsGearBtn').style.display = 'none';
   }
 
   function continueInThisTab() {
@@ -1131,25 +1192,43 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   async function registerPasskeyHandler() {
     if (!supabaseClient || !currentUser) return;
 
+    const hintEl = document.getElementById('settingsPasskeyHint');
+    const originalHint = hintEl.textContent;
+
     if (currentUser.is_anonymous) {
-      alert("Passkeys need a confirmed account. Sign in with your email first (or link one), then set up a passkey.");
+      hintEl.textContent = 'Passkeys need a confirmed account. Sign in with your email first, then come back here.';
       return;
     }
 
-    const btn = document.getElementById('passkeySetupLink');
-    const originalText = btn.textContent;
-    btn.textContent = 'Waiting for Face ID / Touch ID...';
+    const btn = document.getElementById('settingsPasskeyBtn');
     btn.disabled = true;
+    hintEl.textContent = 'Waiting for Face ID / Touch ID...';
 
     try {
       const { data, error } = await supabaseClient.auth.registerPasskey();
       if (error) throw error;
-      btn.textContent = 'Passkey saved ✓';
-      setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2500);
+      hintEl.textContent = 'Passkey saved ✓';
+      setTimeout(() => { hintEl.textContent = originalHint; btn.disabled = false; }, 2500);
     } catch (e) {
-      alert(e.message || 'Could not set up a passkey on this device.');
-      btn.textContent = originalText;
+      hintEl.textContent = e.message || 'Could not set up a passkey on this device.';
       btn.disabled = false;
+    }
+  }
+
+  function showSettings() {
+    document.getElementById('formSection').style.display = 'none';
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('keptScreen').classList.remove('show');
+    document.getElementById('settingsScreen').classList.add('show');
+
+    const emailEl = document.getElementById('settingsAccountEmail');
+    if (currentUser && currentUser.is_anonymous) {
+      emailEl.textContent = 'Beta test account (no email)';
+    } else if (currentUser && currentUser.email) {
+      emailEl.textContent = currentUser.email;
+    } else {
+      emailEl.textContent = '—';
     }
   }
 
@@ -1263,6 +1342,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     document.getElementById('formSection').style.display = 'block';
     document.getElementById('results').classList.remove('show');
     document.getElementById('keptScreen').classList.remove('show');
+    document.getElementById('settingsScreen').classList.remove('show');
     if (mode === 'taste') loadTasteProfile();
   }
 
@@ -1852,8 +1932,8 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
 
     const prefs = [
       Number(budgetMin) > 0
-        ? `Budget: between $${budgetMin} and $${budget} AUD per bottle — do not recommend anything cheaper than $${budgetMin}`
-        : `Budget: up to $${budget} AUD per bottle`,
+        ? `Budget: strictly between $${budgetMin} and $${budget} AUD per bottle. This is a hard constraint, not a preference — every wine you recommend must be priced within this exact range on the list. Do not recommend anything cheaper than $${budgetMin} or more expensive than $${budget}, even if it would otherwise be a great match. If nothing on the list falls in this range, say so honestly in sommelier_note and return fewer recommendations rather than going outside the range.`
+        : `Budget: strictly $${budget} AUD or under per bottle. This is a hard constraint, not a preference — every wine you recommend must be priced at or below $${budget} on the list, even if a more expensive wine would otherwise be a great match. If nothing on the list falls within budget, say so honestly in sommelier_note and return fewer recommendations rather than going over.`,
       style && `Style preference: ${style}`,
       pairing && `Food pairing: ${pairing}`,
       occasion && `Occasion: ${occasion}`,
@@ -1929,6 +2009,32 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       const match = raw.match(/\{[\s\S]*\}/);
       if (!match) throw new Error('Could not read the response. Please try again.');
       const parsed = JSON.parse(match[0]);
+
+      // Safety net: enforce the budget ourselves, in case the model didn't.
+      const minNum = Number(budgetMin);
+      const maxNum = Number(budget);
+      let droppedCount = 0;
+
+      if (parsed.recommendations && parsed.recommendations.length) {
+        const kept = parsed.recommendations.filter(wine => {
+          const priceNum = parsePriceToNumber(wine.price);
+          if (priceNum === null) return true; // couldn't parse it — don't punish for that
+          const overMax = priceNum > maxNum;
+          const underMin = minNum > 0 && priceNum < minNum;
+          if (overMax || underMin) {
+            droppedCount++;
+            return false;
+          }
+          return true;
+        });
+        parsed.recommendations = kept;
+      }
+
+      if (droppedCount > 0) {
+        const rangeText = minNum > 0 ? `$${minNum}–$${maxNum}` : `$${maxNum} or under`;
+        const droppedNote = `(${droppedCount} suggestion${droppedCount > 1 ? 's' : ''} came back outside your ${rangeText} range and ${droppedCount > 1 ? 'were' : 'was'} left out.)`;
+        parsed.sommelier_note = parsed.sommelier_note ? `${parsed.sommelier_note} ${droppedNote}` : droppedNote;
+      }
 
       document.getElementById('resultsEyebrow').textContent = 'The verdict';
       document.getElementById('resultsH2').textContent = wordForCount(parsed.recommendations?.length) + " I'd happily drink";
@@ -2259,6 +2365,7 @@ If nothing credible is found for this exact wine, set found to false and leave o
     document.getElementById('formSection').style.display = 'none';
     document.getElementById('results').classList.remove('show');
     document.getElementById('loading').classList.remove('show');
+    document.getElementById('settingsScreen').classList.remove('show');
     document.getElementById('keptScreen').classList.add('show');
 
     const listEl = document.getElementById('keptList');
@@ -2301,6 +2408,16 @@ If nothing credible is found for this exact wine, set found to false and leave o
     } catch (e) {
       listEl.innerHTML = '<div class="kept-empty">Could not load your kept bottles right now.</div>';
     }
+  }
+
+  function parsePriceToNumber(price) {
+    if (price === null || price === undefined) return null;
+    const str = String(price);
+    // Grab the first plausible number in the string (handles "$85", "85", "AUD 85", "$85.50", "85 (bottle)")
+    const match = str.match(/(\d{1,4}(?:\.\d{1,2})?)/);
+    if (!match) return null;
+    const num = parseFloat(match[1]);
+    return isNaN(num) ? null : num;
   }
 
   function formatPrice(price) {
