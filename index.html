@@ -494,6 +494,12 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   padding: 18px 20px; margin-bottom: 12px;
 }
 .kept-card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.kept-remove-btn {
+  background: none; border: none; color: var(--text-dim); cursor: pointer;
+  padding: 4px; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm); transition: color 0.15s, background 0.15s;
+}
+.kept-remove-btn:hover { color: var(--bordeaux-light); background: rgba(156,58,77,0.1); }
 .kept-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
 .kept-stars { display: flex; gap: 2px; }
 .kept-star { font-size: 13px; color: var(--brass); }
@@ -2395,10 +2401,15 @@ If nothing credible is found for this exact wine, set found to false and leave o
         const date = row.created_at ? new Date(row.created_at).toLocaleDateString() : '';
         const metaLine = [row.region, row.price, date].filter(Boolean).join(' · ');
         return `
-          <div class="kept-card">
+          <div class="kept-card" id="kept-row-${row.id}">
             <div class="kept-card-top">
               <div class="kept-name">${esc(row.wine_name)}</div>
-              <div class="kept-stars">${stars}</div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="kept-stars">${stars}</div>
+                <button class="kept-remove-btn" onclick="removeFavourite('${row.id}')" aria-label="Remove from Favourites">
+                  <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                </button>
+              </div>
             </div>
             ${metaLine ? `<div class="kept-meta">${esc(metaLine)}</div>` : ''}
             ${row.recommended_for ? `<div class="kept-notes">${esc(row.recommended_for)}</div>` : ''}
@@ -2407,6 +2418,44 @@ If nothing credible is found for this exact wine, set found to false and leave o
       }).join('');
     } catch (e) {
       listEl.innerHTML = '<div class="kept-empty">Could not load your kept bottles right now.</div>';
+    }
+  }
+
+  async function removeFavourite(id) {
+    if (!supabaseClient || !currentUser) return;
+
+    const cardEl = document.getElementById(`kept-row-${id}`);
+    if (cardEl) {
+      cardEl.style.opacity = '0.4';
+      cardEl.style.pointerEvents = 'none';
+    }
+
+    try {
+      const { error } = await supabaseClient
+        .from('wine_ratings')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', currentUser.id);
+
+      if (error) throw error;
+
+      if (cardEl) {
+        cardEl.style.transition = 'opacity 0.2s, transform 0.2s';
+        cardEl.style.transform = 'translateX(20px)';
+        setTimeout(() => {
+          cardEl.remove();
+          const listEl = document.getElementById('keptList');
+          if (listEl && listEl.children.length === 0) {
+            listEl.innerHTML = '<div class="kept-empty">Nothing kept yet. Rate or keep a wine and it will show up here.</div>';
+          }
+        }, 200);
+      }
+    } catch (e) {
+      console.error('[favourites] failed to remove', e);
+      if (cardEl) {
+        cardEl.style.opacity = '1';
+        cardEl.style.pointerEvents = 'auto';
+      }
     }
   }
 
