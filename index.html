@@ -547,6 +547,14 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   padding: 6px 12px; cursor: pointer; transition: all 0.2s;
 }
 .logout-link:hover { color: var(--brass-light); border-color: var(--border-hover); }
+.passkey-setup-link {
+  position: fixed; top: 58px; right: 20px; z-index: 5;
+  font-family: var(--sans); font-size: 11px; font-weight: 500;
+  color: var(--text-dim); background: rgba(18,10,23,0.7);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 6px 12px; cursor: pointer; transition: all 0.2s;
+}
+.passkey-setup-link:hover { color: var(--brass-light); border-color: var(--border-hover); }
 
 /* Footer */
 .footer {
@@ -580,6 +588,14 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
       <div class="login-error" id="loginError"></div>
     </div>
     <div class="login-sent" id="loginSent">Check your email and tap the link. This tab will sign in on its own once you do.</div>
+
+    <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--border);">
+      <button class="btn-primary" id="passkeyBtn" onclick="signInWithPasskeyHandler()" style="background:transparent; border:1px solid var(--brass); color:var(--brass-light); box-shadow:none;">
+        Sign in with a Passkey
+      </button>
+      <p style="font-size:11px; color:var(--text-dim); margin-top:8px; margin-bottom:0;">Face ID, Touch ID, or your device's screen lock — no email needed if you've set one up before.</p>
+    </div>
+
     <button class="reset-btn" id="betaTestBtn" onclick="betaTestSignIn()" style="margin-top:18px">BETA TEST — skip sign-in</button>
   </div>
 </div>
@@ -601,6 +617,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
 <!-- Logout -->
 <button class="logout-link" id="logoutLink" style="display:none" onclick="signOut()">Sign out</button>
+<button class="passkey-setup-link" id="passkeySetupLink" style="display:none" onclick="registerPasskeyHandler()">Set up a Passkey</button>
 
 <div class="wrap" id="appWrap" style="display:none">
 
@@ -930,7 +947,9 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   let supabaseClient = null;
   try {
     if (window.supabase && typeof window.supabase.createClient === 'function') {
-      supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+      supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey, {
+        auth: { experimental: { passkey: true } },
+      });
     } else {
       console.error('[init] Supabase library did not load — ratings and prior-rating lookups will be disabled, but the rest of the app will still work.');
     }
@@ -950,6 +969,8 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     document.getElementById('magicLandedGate').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
     document.getElementById('logoutLink').style.display = 'block';
+    const canSetUpPasskey = currentUser && !currentUser.is_anonymous;
+    document.getElementById('passkeySetupLink').style.display = canSetUpPasskey ? 'block' : 'none';
   }
 
   function showLoggedOut() {
@@ -957,6 +978,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     document.getElementById('magicLandedGate').style.display = 'none';
     document.getElementById('appWrap').style.display = 'none';
     document.getElementById('logoutLink').style.display = 'none';
+    document.getElementById('passkeySetupLink').style.display = 'none';
     document.getElementById('loginSent').classList.remove('show');
     document.getElementById('loginForm').style.display = 'flex';
   }
@@ -966,6 +988,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     document.getElementById('magicLandedGate').style.display = 'flex';
     document.getElementById('appWrap').style.display = 'none';
     document.getElementById('logoutLink').style.display = 'none';
+    document.getElementById('passkeySetupLink').style.display = 'none';
   }
 
   function continueInThisTab() {
@@ -1010,6 +1033,37 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     }
   }
 
+  async function signInWithPasskeyHandler() {
+    const errorEl = document.getElementById('loginError');
+    errorEl.classList.remove('show');
+
+    if (!supabaseClient) {
+      errorEl.textContent = 'Sign-in is temporarily unavailable. Please try again shortly.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    const btn = document.getElementById('passkeyBtn');
+    btn.disabled = true;
+    btn.textContent = 'Waiting for Face ID / Touch ID...';
+
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithPasskey();
+      if (error) throw error;
+      currentUser = data.user;
+      showLoggedIn();
+    } catch (e) {
+      const friendly = e.message && e.message.toLowerCase().includes('not supported')
+        ? "This device or browser doesn't support passkeys."
+        : (e.message || 'Could not sign in with a passkey. Try the magic link instead, or register a passkey once signed in.');
+      errorEl.textContent = friendly;
+      errorEl.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign in with a Passkey';
+    }
+  }
+
   async function betaTestSignIn() {
     const errorEl = document.getElementById('loginError');
     errorEl.classList.remove('show');
@@ -1034,6 +1088,31 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
       errorEl.classList.add('show');
       btn.disabled = false;
       btn.textContent = 'BETA TEST — skip sign-in';
+    }
+  }
+
+  async function registerPasskeyHandler() {
+    if (!supabaseClient || !currentUser) return;
+
+    if (currentUser.is_anonymous) {
+      alert("Passkeys need a confirmed account. Sign in with your email first (or link one), then set up a passkey.");
+      return;
+    }
+
+    const btn = document.getElementById('passkeySetupLink');
+    const originalText = btn.textContent;
+    btn.textContent = 'Waiting for Face ID / Touch ID...';
+    btn.disabled = true;
+
+    try {
+      const { data, error } = await supabaseClient.auth.registerPasskey();
+      if (error) throw error;
+      btn.textContent = 'Passkey saved ✓';
+      setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2500);
+    } catch (e) {
+      alert(e.message || 'Could not set up a passkey on this device.');
+      btn.textContent = originalText;
+      btn.disabled = false;
     }
   }
 
