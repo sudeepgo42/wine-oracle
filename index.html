@@ -1848,15 +1848,14 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
 
 ${prefs}${personal.text}
 
-Many wine lists offer wines both by the glass and by the bottle. Prioritise full bottles at or under the stated budget. Only include a by-the-glass option if it is a genuinely excellent match worth calling out on its own merits — do not include a glass pour just to fill out the list. Whichever you recommend, set "serving" to "bottle" or "glass" accurately based on what is actually being recommended and at what price on the list.
+Many wine lists offer wines both by the glass and by the bottle. Only recommend full bottles at or under the stated budget. Do not recommend anything only available by the glass, even if it would otherwise be a strong match — ignore by-the-glass listings entirely and choose from bottles only.
 
 Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
 {
   "recommendations": [
     {
       "name": "Full wine name as it appears on the list",
-      "price": "Price as listed, for the serving type given (bottle or glass price)",
-      "serving": "bottle or glass",
+      "price": "Bottle price as listed",
       "region": "Region or appellation",
       "grape": "Primary grape variety or blend",
       "style": "Brief style descriptor",
@@ -1961,15 +1960,13 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
             ${renderConfidenceMeter(meta.confidence, meta.confidenceReason)}
           `;
         } else {
-          const isGlass = wine.serving && wine.serving.toLowerCase() === 'glass';
           topBlock = `
             ${isHero ? '<div class="hero-label">MY PICK OF THE LIST</div>' : ''}
             <div class="wine-top">
               <div class="wine-name">${esc(wine.name)}</div>
-              ${wine.price ? `<div class="wine-price">${esc(wine.price)}</div>` : ''}
+              ${wine.price ? `<div class="wine-price">${esc(formatPrice(wine.price))}</div>` : ''}
             </div>
             <div class="wine-meta">
-              ${isGlass ? `<span class="tag glass-tag">By the glass</span>` : ''}
               ${wine.region ? `<span class="tag">${esc(wine.region)}</span>` : ''}
               ${wine.grape ? `<span class="tag">${esc(wine.grape)}</span>` : ''}
               ${wine.style ? `<span class="tag">${esc(wine.style)}</span>` : ''}
@@ -2269,6 +2266,14 @@ If nothing credible is found for this exact wine, set found to false and leave o
     } catch (e) {
       listEl.innerHTML = '<div class="kept-empty">Could not load your kept bottles right now.</div>';
     }
+  }
+
+  function formatPrice(price) {
+    const str = String(price).trim();
+    if (!str) return str;
+    // Already has a currency symbol — leave it as is
+    if (/^[$£€]/.test(str)) return str;
+    return '$' + str;
   }
 
   function esc(s) {
