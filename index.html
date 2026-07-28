@@ -581,19 +581,21 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
       </svg>
     </div>
     <h1>Gatsby's <em>Wine Oracle</em></h1>
-    <p>Enter your email and we'll send a link to sign in — no password needed.</p>
-    <div class="login-form" id="loginForm">
-      <input type="email" class="login-input" id="loginEmail" placeholder="you@example.com" autocomplete="email">
-      <button class="btn-primary" id="loginBtn" onclick="sendMagicLink()">Send Magic Link</button>
-      <div class="login-error" id="loginError"></div>
-    </div>
-    <div class="login-sent" id="loginSent">Check your email and tap the link. This tab will sign in on its own once you do.</div>
+    <p>Sign in with a passkey, or use your email if this is your first time.</p>
 
-    <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--border);">
-      <button class="btn-primary" id="passkeyBtn" onclick="signInWithPasskeyHandler()" style="background:transparent; border:1px solid var(--brass); color:var(--brass-light); box-shadow:none;">
-        Sign in with a Passkey
-      </button>
-      <p style="font-size:11px; color:var(--text-dim); margin-top:8px; margin-bottom:0;">Face ID, Touch ID, or your device's screen lock — no email needed if you've set one up before.</p>
+    <button class="btn-primary" id="passkeyBtn" onclick="signInWithPasskeyHandler()">
+      Sign in with a Passkey
+    </button>
+    <p style="font-size:11px; color:var(--text-dim); margin-top:8px; margin-bottom:0;">Face ID, Touch ID, or your device's screen lock.</p>
+
+    <div style="margin-top:22px; padding-top:22px; border-top:1px solid var(--border);">
+      <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">No passkey set up yet? Enter your email instead — you'll be offered a passkey right after.</p>
+      <div class="login-form" id="loginForm">
+        <input type="email" class="login-input" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+        <button class="btn-primary" id="loginBtn" onclick="sendMagicLink()" style="background:transparent; border:1px solid var(--brass); color:var(--brass-light); box-shadow:none;">Send Magic Link</button>
+        <div class="login-error" id="loginError"></div>
+      </div>
+      <div class="login-sent" id="loginSent">Check your email and tap the link. This tab will sign in on its own once you do.</div>
     </div>
 
     <button class="reset-btn" id="betaTestBtn" onclick="betaTestSignIn()" style="margin-top:18px">BETA TEST — skip sign-in</button>
@@ -607,10 +609,11 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
       <svg viewBox="0 0 100 100" width="70" height="70"><defs><radialGradient id="brassB" cx="34%" cy="28%"><stop offset="0%" stop-color="#f0d6a4"/><stop offset="52%" stop-color="#b8935a"/><stop offset="100%" stop-color="#6e5333"/></radialGradient></defs><circle cx="50" cy="50" r="48" fill="url(#brassB)"/><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(18,10,23,.4)" stroke-width="1" stroke-dasharray="2.6 3.2"/><text x="50" y="61" text-anchor="middle" fill="#120a17" stroke="#120a17" stroke-width=".7" stroke-linejoin="round" font-family="'Great Vibes', cursive" font-size="35">SLC</text></svg>
     </div>
     <h1>You're <em>Signed In</em></h1>
-    <p>If Gatsby's Wine Oracle is already open in another tab, that one should sign in on its own. Otherwise, continue right here.</p>
-    <div class="login-form">
-      <p style="font-size:12px; color:var(--text-dim); margin-bottom:16px; margin-top:-8px;">This tab isn't needed anymore — feel free to close it, or continue here.</p>
-      <button class="btn-primary" onclick="continueInThisTab()">Continue Here Instead</button>
+    <p id="magicLandedIntro">If Gatsby's Wine Oracle is already open in another tab, that one should sign in on its own.</p>
+    <div class="login-form" id="magicLandedPasskeyOffer">
+      <p style="font-size:12px; color:var(--text-secondary); margin-bottom:14px; margin-top:-4px;">Want a faster way in next time? Set up a passkey now — Face ID, Touch ID, or your device's screen lock.</p>
+      <button class="btn-primary" onclick="setUpPasskeyThenContinue()">Set Up a Passkey</button>
+      <button class="reset-btn" style="margin-top:4px" onclick="continueInThisTab()">Skip for now →</button>
     </div>
   </div>
 </div>
@@ -995,6 +998,30 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     showLoggedIn();
   }
 
+  async function setUpPasskeyThenContinue() {
+    if (!supabaseClient || !currentUser) {
+      continueInThisTab();
+      return;
+    }
+
+    const btn = document.querySelector('#magicLandedPasskeyOffer .btn-primary');
+    const introEl = document.getElementById('magicLandedIntro');
+    btn.disabled = true;
+    btn.textContent = 'Waiting for Face ID / Touch ID...';
+
+    try {
+      const { error } = await supabaseClient.auth.registerPasskey();
+      if (error) throw error;
+      introEl.textContent = "Passkey saved. Next time, just tap Sign in with a Passkey.";
+      btn.textContent = 'Done ✓';
+      setTimeout(continueInThisTab, 1400);
+    } catch (e) {
+      introEl.textContent = e.message || "Couldn't set up a passkey on this device — you can try again anytime from the app.";
+      btn.disabled = false;
+      btn.textContent = 'Set Up a Passkey';
+    }
+  }
+
   async function sendMagicLink() {
     const email = document.getElementById('loginEmail').value.trim();
     const errorEl = document.getElementById('loginError');
@@ -1053,9 +1080,10 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
       currentUser = data.user;
       showLoggedIn();
     } catch (e) {
-      const friendly = e.message && e.message.toLowerCase().includes('not supported')
-        ? "This device or browser doesn't support passkeys."
-        : (e.message || 'Could not sign in with a passkey. Try the magic link instead, or register a passkey once signed in.');
+      const lower = (e.message || '').toLowerCase();
+      const friendly = lower.includes('not supported')
+        ? "This device or browser doesn't support passkeys. Use your email below instead."
+        : "No passkey found on this device yet. Use your email below — you'll be offered a passkey right after signing in.";
       errorEl.textContent = friendly;
       errorEl.classList.add('show');
     } finally {
