@@ -552,6 +552,60 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   display: none; font-size: 12px; color: #e08888; margin-top: 4px;
 }
 .login-error.show { display: block; }
+/* First-time intro walkthrough */
+.intro-gate {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 24px; position: relative; z-index: 6;
+  background: var(--bg-deep);
+}
+.intro-card {
+  max-width: 400px; width: 100%; text-align: center;
+  background: linear-gradient(180deg, var(--bg-surface), var(--bg-card));
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 40px 32px 32px;
+  box-shadow: 0 20px 50px -24px rgba(0,0,0,0.7);
+  position: relative; overflow: hidden;
+}
+.intro-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(to right, transparent, var(--brass), var(--bordeaux-light), var(--brass), transparent);
+  opacity: 0.75;
+}
+.intro-icon-wrap {
+  width: 64px; height: 64px; margin: 0 auto 22px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(184,147,90,0.08); border: 1px solid var(--border);
+  color: var(--brass-light);
+}
+.intro-eyebrow {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.2em; color: var(--brass);
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.intro-title {
+  font-family: var(--sans); font-size: 1.4rem; font-weight: 600;
+  color: var(--champagne); margin-bottom: 12px; letter-spacing: -.02em;
+}
+.intro-body {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 28px;
+  min-height: 66px;
+}
+.intro-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 22px; }
+.intro-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: all 0.2s; }
+.intro-dot.active { background: var(--brass); width: 18px; border-radius: 3px; }
+.intro-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.intro-skip {
+  background: none; border: none; color: var(--text-dim); font-family: var(--sans);
+  font-size: 12px; font-weight: 500; cursor: pointer; padding: 8px;
+}
+.intro-skip:hover { color: var(--text-secondary); }
+.intro-next {
+  padding: 12px 28px; background: linear-gradient(180deg, var(--brass-light), var(--brass));
+  border: none; border-radius: var(--radius); color: #1d1220;
+  font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; cursor: pointer; transition: filter 0.2s;
+}
+.intro-next:hover { filter: brightness(1.08); }
+
 .settings-gear-btn {
   position: fixed; top: 20px; left: 20px; z-index: 5;
   width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
@@ -652,6 +706,21 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
   </svg>
 </button>
+
+<!-- First-time intro walkthrough -->
+<div class="intro-gate" id="introGate" style="display:none">
+  <div class="intro-card">
+    <div class="intro-icon-wrap" id="introIcon"></div>
+    <div class="intro-eyebrow" id="introEyebrow">Welcome</div>
+    <div class="intro-title" id="introTitle">Gatsby's Wine Oracle</div>
+    <div class="intro-body" id="introBody">Hand me the list. I'll tell you what to drink.</div>
+    <div class="intro-dots" id="introDots"></div>
+    <div class="intro-actions">
+      <button class="intro-skip" onclick="skipIntro()">Skip</button>
+      <button class="intro-next" id="introNextBtn" onclick="nextIntroStep()">Next</button>
+    </div>
+  </div>
+</div>
 
 <div class="wrap" id="appWrap" style="display:none">
 
@@ -1012,6 +1081,14 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
         </span>
         <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
       </button>
+
+      <button class="settings-row-btn" onclick="replayIntro()">
+        <span>
+          Replay the App Tour
+          <div class="settings-row-hint">A quick reminder of what this app does.</div>
+        </span>
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
     </div>
 
     <div class="panel foil">
@@ -1062,16 +1139,115 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     return window.location.hash.includes('access_token') || window.location.hash.includes('type=magiclink');
   }
 
-  function showLoggedIn() {
+  const INTRO_SEEN_KEY = 'wo_intro_seen_v1';
+
+  const INTRO_STEPS = [
+    {
+      eyebrow: 'Welcome',
+      title: "Gatsby's Wine Oracle",
+      body: "Hand me the list. I'll tell you what to drink. A few quick screens to show you around, then we're done.",
+      icon: `<svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10l-1 9a4 4 0 0 1-8 0L7 4z"/><path d="M7 4H5.5a1.5 1.5 0 0 0 0 3H7"/><path d="M17 4h1.5a1.5 1.5 0 0 1 0 3H17"/></svg>`,
+    },
+    {
+      eyebrow: 'Wine List',
+      title: 'Read Any List',
+      body: "Photograph a wine list, upload a PDF, or skip the file entirely and just tell me your budget and what you're after. I'll pick a few worth your while, with reasoning and critic reviews attached.",
+      icon: `<svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v4h4"/><path d="M8 12h8"/><path d="M8 16h5"/></svg>`,
+    },
+    {
+      eyebrow: 'Read a Label',
+      title: 'Identify Any Bottle',
+      body: 'Already holding a bottle? Photograph the label — front and back if you have it — and I\'ll identify it, tell you what to expect, and let you know how confident I am.',
+      icon: `<svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.6 12 21.2 2.8 12 2 3l9 .8 8.6 8.8Z"/><circle cx="7.5" cy="7.5" r="1.1" fill="currentColor" stroke="none"/></svg>`,
+    },
+    {
+      eyebrow: 'My Taste',
+      title: 'Learn Your Palate',
+      body: "A short quiz on your red and white preferences, plus every wine you rate along the way, builds a picture of what you actually like — so recommendations get sharper the more you use this.",
+      icon: `<svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>`,
+    },
+    {
+      eyebrow: 'Favourites',
+      title: 'Never Forget a Bottle',
+      body: "Star-rate anything you try, or tap Keep on a recommendation. It's saved to your Favourites, viewable anytime, and quietly feeds back into future suggestions.",
+      icon: `<svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>`,
+    },
+  ];
+
+  let introStepIndex = 0;
+
+  function renderIntroStep() {
+    const step = INTRO_STEPS[introStepIndex];
+    document.getElementById('introIcon').innerHTML = step.icon;
+    document.getElementById('introEyebrow').textContent = step.eyebrow;
+    document.getElementById('introTitle').textContent = step.title;
+    document.getElementById('introBody').textContent = step.body;
+
+    const dotsEl = document.getElementById('introDots');
+    dotsEl.innerHTML = INTRO_STEPS.map((_, i) =>
+      `<span class="intro-dot ${i === introStepIndex ? 'active' : ''}"></span>`
+    ).join('');
+
+    document.getElementById('introNextBtn').textContent =
+      introStepIndex === INTRO_STEPS.length - 1 ? "Let's Go" : 'Next';
+  }
+
+  function nextIntroStep() {
+    if (introStepIndex < INTRO_STEPS.length - 1) {
+      introStepIndex++;
+      renderIntroStep();
+    } else {
+      finishIntro();
+    }
+  }
+
+  function skipIntro() {
+    finishIntro();
+  }
+
+  function finishIntro() {
+    try { localStorage.setItem(INTRO_SEEN_KEY, '1'); } catch (e) {}
+    document.getElementById('introGate').style.display = 'none';
+    revealApp();
+  }
+
+  function hasSeenIntro() {
+    try { return localStorage.getItem(INTRO_SEEN_KEY) === '1'; } catch (e) { return true; }
+  }
+
+  function replayIntro() {
+    document.getElementById('settingsScreen').classList.remove('show');
+    document.getElementById('appWrap').style.display = 'none';
+    introStepIndex = 0;
+    renderIntroStep();
+    document.getElementById('introGate').style.display = 'flex';
+  }
+
+  function revealApp() {
     document.getElementById('loginGate').style.display = 'none';
     document.getElementById('magicLandedGate').style.display = 'none';
+    document.getElementById('introGate').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
     document.getElementById('settingsGearBtn').style.display = 'flex';
+  }
+
+  function showLoggedIn() {
+    if (!hasSeenIntro()) {
+      document.getElementById('loginGate').style.display = 'none';
+      document.getElementById('magicLandedGate').style.display = 'none';
+      document.getElementById('appWrap').style.display = 'none';
+      introStepIndex = 0;
+      renderIntroStep();
+      document.getElementById('introGate').style.display = 'flex';
+      return;
+    }
+    revealApp();
   }
 
   function showLoggedOut() {
     document.getElementById('loginGate').style.display = 'flex';
     document.getElementById('magicLandedGate').style.display = 'none';
+    document.getElementById('introGate').style.display = 'none';
     document.getElementById('appWrap').style.display = 'none';
     document.getElementById('settingsGearBtn').style.display = 'none';
     document.getElementById('settingsScreen').classList.remove('show');
