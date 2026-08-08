@@ -693,13 +693,13 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     <!-- LIST MODE -->
     <div id="modeListPanels">
       <div class="panel foil">
-        <div class="panel-title">The Wine List</div>
+        <div class="panel-title">The Wine List (Optional)</div>
 
         <div class="photo-callout">
           <svg class="icon photo-callout-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v4h4"/><path d="M8 12h8"/><path d="M8 16h5"/></svg>
           <div class="photo-callout-text">
-            <div class="photo-callout-title">However it's easiest</div>
-            <div class="photo-callout-body">A PDF, or photograph each page. Blurry corners are fine — I've read worse.</div>
+            <div class="photo-callout-title">Got a list? However it's easiest</div>
+            <div class="photo-callout-body">A PDF, or photograph each page. Blurry corners are fine — I've read worse. No list on hand? Skip this and tell me what you're after below — I'll suggest something anyway.</div>
           </div>
         </div>
 
@@ -707,7 +707,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
           <input type="file" id="fileInput" accept=".pdf,image/*" multiple>
           <svg class="icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v4h4"/><path d="M8 12h8"/><path d="M8 16h5"/></svg>
           <div class="upload-label">Drop the wine list here, or click to browse</div>
-          <div class="upload-sub">PDF, JPG or PNG &nbsp;·&nbsp; Multiple pages welcome</div>
+          <div class="upload-sub">PDF, JPG or PNG &nbsp;·&nbsp; Multiple pages welcome &nbsp;·&nbsp; Totally optional</div>
         </div>
 
         <div class="image-grid" id="imageGrid" style="display:none"></div>
@@ -791,7 +791,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
       </div>
 
       <div class="sticky-cta">
-        <button class="btn-primary" id="submitBtn" disabled onclick="submitForm()">Pour Me Something</button>
+        <button class="btn-primary" id="submitBtn" onclick="submitForm()">Pour Me Something</button>
       </div>
     </div>
 
@@ -1892,7 +1892,6 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
   function removeImage(i) {
     images.splice(i, 1);
     renderThumbnails();
-    document.getElementById('submitBtn').disabled = images.length === 0;
   }
 
   function renderThumbnails() {
@@ -1942,8 +1941,6 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
   }
 
   async function submitForm() {
-    if (images.length === 0) return;
-
     const budgetMin = document.getElementById('budgetMinSlider').value;
     const budget = document.getElementById('budgetSlider').value;
     const style = getSelectedStyle();
@@ -1952,36 +1949,64 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
     const notes = document.getElementById('notesInput').value.trim();
     const personal = await buildPersonalContext();
 
+    const hasList = images.length > 0;
+    const hasAnyPreference = !!(style || pairing || occasion || notes);
+
+    // No list, no stated preference, and nothing known about them yet —
+    // there's genuinely nothing to go on. Ask them to fill something in
+    // rather than returning a hollow, generic guess.
+    if (!hasList && !hasAnyPreference && !personal.used) {
+      const box = document.getElementById('errorBox');
+      box.innerHTML = `Give me at least something to go on — pick a style or food pairing above, add a note, or <button onclick="switchMode('taste')" style="background:none;border:none;color:var(--brass-light);text-decoration:underline;cursor:pointer;font-size:inherit;font-family:inherit;padding:0;">fill out My Taste</button> so I know your palate.`;
+      box.classList.add('show');
+      return;
+    }
+
+    const budgetLine = Number(budgetMin) > 0
+      ? `Budget: strictly between $${budgetMin} and $${budget} AUD per bottle. This is a hard constraint, not a preference. Do not recommend anything cheaper than $${budgetMin} or more expensive than $${budget}, even if it would otherwise be a great match.`
+      : `Budget: strictly $${budget} AUD or under per bottle. This is a hard constraint, not a preference — do not recommend anything more expensive than $${budget}, even if it would otherwise be a great match.`;
+
     const prefs = [
-      Number(budgetMin) > 0
-        ? `Budget: strictly between $${budgetMin} and $${budget} AUD per bottle. This is a hard constraint, not a preference — every wine you recommend must be priced within this exact range on the list. Do not recommend anything cheaper than $${budgetMin} or more expensive than $${budget}, even if it would otherwise be a great match. If nothing on the list falls in this range, say so honestly in sommelier_note and return fewer recommendations rather than going outside the range.`
-        : `Budget: strictly $${budget} AUD or under per bottle. This is a hard constraint, not a preference — every wine you recommend must be priced at or below $${budget} on the list, even if a more expensive wine would otherwise be a great match. If nothing on the list falls within budget, say so honestly in sommelier_note and return fewer recommendations rather than going over.`,
+      budgetLine,
       style && `Style preference: ${style}`,
       pairing && `Food pairing: ${pairing}`,
       occasion && `Occasion: ${occasion}`,
       notes && `Additional notes (may include region): ${notes}`,
     ].filter(Boolean).join('\n');
 
-    const fileBlocks = images.map(item => {
-      if (item.kind === 'pdf') {
-        return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: item.base64 } };
-      }
-      return { type: 'image', source: { type: 'base64', media_type: item.mediaType, data: item.base64 } };
-    });
+    document.getElementById('formSection').style.display = 'none';
+    document.getElementById('errorBox').classList.remove('show');
+    document.getElementById('loadingTitle').textContent = 'Give me a moment';
+    document.getElementById('loading').classList.add('show');
+    document.getElementById('results').classList.remove('show');
 
-    const pageCount = images.length;
-    const hasPdf = images.some(i => i.kind === 'pdf');
-    const descriptor = hasPdf && pageCount === 1
-      ? 'a PDF wine list'
-      : pageCount > 1
-        ? `${pageCount} pages/files of a wine list`
-        : 'a page from a wine list';
+    let userContent;
 
-    const userContent = [
-      ...fileBlocks,
-      {
-        type: 'text',
-        text: `The attached file${pageCount > 1 ? 's are' : ' is'} ${descriptor}. Based on the preferences below, recommend 3 to 5 specific wines from this list that best match.
+    if (hasList) {
+      const fileBlocks = images.map(item => {
+        if (item.kind === 'pdf') {
+          return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: item.base64 } };
+        }
+        return { type: 'image', source: { type: 'base64', media_type: item.mediaType, data: item.base64 } };
+      });
+
+      const pageCount = images.length;
+      const hasPdf = images.some(i => i.kind === 'pdf');
+      const descriptor = hasPdf && pageCount === 1
+        ? 'a PDF wine list'
+        : pageCount > 1
+          ? `${pageCount} pages/files of a wine list`
+          : 'a page from a wine list';
+
+      document.getElementById('loadingSub').textContent = personal.used
+        ? `Reading ${pageCount === 1 ? 'the list' : pageCount + ' pages'}, then weighing it against what you've liked before.`
+        : `Reading ${pageCount === 1 ? 'the list' : pageCount + ' pages'}, then thinking about what suits you.`;
+
+      userContent = [
+        ...fileBlocks,
+        {
+          type: 'text',
+          text: `The attached file${pageCount > 1 ? 's are' : ' is'} ${descriptor}. Based on the preferences below, recommend 3 to 5 specific wines from this list that best match.
 
 ${prefs}${personal.text}
 
@@ -2002,17 +2027,40 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
   ],
   "sommelier_note": "One to two sentences of overall guidance or a pairing suggestion."
 }`
-      }
-    ];
+        }
+      ];
+    } else {
+      document.getElementById('loadingSub').textContent = personal.used
+        ? "No list to read, so I'm going on what you've told me and what's worked for you before."
+        : "No list to read, so I'm going on what you've told me tonight.";
 
-    document.getElementById('formSection').style.display = 'none';
-    document.getElementById('errorBox').classList.remove('show');
-    document.getElementById('loadingTitle').textContent = 'Give me a moment';
-    document.getElementById('loadingSub').textContent = personal.used
-      ? `Reading ${pageCount === 1 ? 'the list' : pageCount + ' pages'}, then weighing it against what you've liked before.`
-      : `Reading ${pageCount === 1 ? 'the list' : pageCount + ' pages'}, then thinking about what suits you.`;
-    document.getElementById('loading').classList.add('show');
-    document.getElementById('results').classList.remove('show');
+      userContent = [
+        {
+          type: 'text',
+          text: `The person has no wine list to hand — recommend 3 to 5 real, specific wines they could realistically look for or buy, based on the preferences below. These should be genuine wines that exist (not generic archetypes), ideally ones that are reasonably available, not ultra-rare or allocation-only.
+
+${prefs}${personal.text}
+
+Since there is no specific list to read from, "price" should be a realistic typical retail or restaurant price for that wine in AUD, clearly an estimate.
+
+Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
+{
+  "recommendations": [
+    {
+      "name": "Full wine name including producer and, where relevant, vintage",
+      "price": "Estimated typical price in AUD, e.g. '~$45'",
+      "region": "Region or appellation",
+      "grape": "Primary grape variety or blend",
+      "style": "Brief style descriptor",
+      "description": "Two to three sentences on character, flavour profile, and when to drink it",
+      "why": "One or two sentences of first-person reasoning for why this suits what was asked. Present tense, opinionated, no more than two sentences.${personal.used ? ' If this pick connects to a wine they have loved before or fits their taste profile, say so briefly.' : ''}"
+    }
+  ],
+  "sommelier_note": "One to two sentences of overall guidance, and a brief honest note that these are general suggestions rather than picks from an actual list — worth checking availability before heading out."
+}`
+        }
+      ];
+    }
 
     try {
       const res = await fetch('/api/sommelier', {
@@ -2058,8 +2106,10 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
         parsed.sommelier_note = parsed.sommelier_note ? `${parsed.sommelier_note} ${droppedNote}` : droppedNote;
       }
 
-      document.getElementById('resultsEyebrow').textContent = 'The verdict';
-      document.getElementById('resultsH2').textContent = wordForCount(parsed.recommendations?.length) + " I'd happily drink";
+      document.getElementById('resultsEyebrow').textContent = hasList ? 'The verdict' : 'General suggestions';
+      document.getElementById('resultsH2').textContent = hasList
+        ? wordForCount(parsed.recommendations?.length) + " I'd happily drink"
+        : "Worth seeking out";
       document.getElementById('sommelierNoteLabel').textContent = 'One more thing';
 
       renderResults(parsed, {
