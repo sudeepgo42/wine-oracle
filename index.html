@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gatsby's Wine Oracle</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#120a17">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wine Oracle">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
@@ -1020,6 +1027,15 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
 <script>
   let currentMode = 'list';
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {
+        // Non-fatal — the app works fine without a service worker, it just
+        // won't be installable as a PWA or work offline.
+      });
+    });
+  }
 </script>
 
 <script>
