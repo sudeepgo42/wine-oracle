@@ -753,7 +753,6 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     </div>
     <div class="wordmark-eyebrow">Gatsby's</div>
     <h1 class="wordmark">Wine <em>Oracle</em></h1>
-    <div class="byline">Curated by Shamus Cooper</div>
     <p class="masthead-sub">Hand me the list.<br>I'll tell you what to drink.</p>
   </header>
 
@@ -2517,11 +2516,9 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'perplexity/sonar',
-          max_tokens: 400,
           messages: [{
             role: 'user',
-            content: `Search for published critic reviews or ratings of this specific wine: "${query}". Check sources like Halliday Wine Companion, Wine Spectator, Decanter, James Suckling, Vivino, and similar.
+            content: `Search the web for published critic reviews or ratings of this specific wine: "${query}". Check sources like Halliday Wine Companion, Wine Spectator, Decanter, James Suckling, Vivino, and similar.
 
 Respond ONLY with valid JSON, no markdown, no preamble:
 {
@@ -2540,7 +2537,7 @@ If nothing credible is found for this exact wine, set found to false and leave o
       if (!res.ok) throw new Error('lookup failed');
 
       const data = await res.json();
-      const raw = data.choices?.[0]?.message?.content || '';
+      const raw = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
       const match = raw.match(/\{[\s\S]*\}/);
       if (!match) throw new Error('no json');
       const parsed = JSON.parse(match[0]);
