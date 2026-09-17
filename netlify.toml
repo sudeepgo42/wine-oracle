@@ -4,3 +4,7 @@
 [[edge_functions]]
   path = "/api/sommelier"
   function = "sommelier"
+
+[[edge_functions]]
+  path = "/api/critic"
+  function = "critic"
