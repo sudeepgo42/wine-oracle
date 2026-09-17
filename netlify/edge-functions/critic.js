@@ -4,25 +4,27 @@ export default async (request, context) => {
   }
 
   try {
-    const { messages, model, max_tokens } = await request.json();
+    const { messages } = await request.json();
 
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('OPENROUTER_API_KEY')}`,
+        'x-api-key': Deno.env.get('ANTHROPIC_API_KEY'),
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: model || 'perplexity/sonar',
-        max_tokens: max_tokens || 400,
+        model: 'claude-sonnet-4-5',
+        max_tokens: 600,
         messages,
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
       }),
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      return new Response(JSON.stringify({ error: data.error || { message: 'OpenRouter API error' } }), {
+      return new Response(JSON.stringify({ error: data.error || { message: 'Anthropic API error' } }), {
         status: res.status,
         headers: { 'Content-Type': 'application/json' },
       });
