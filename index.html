@@ -362,6 +362,13 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 .results.show { display: block; animation: fadeUp 0.5s ease both; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 .results-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; color: var(--brass); text-transform: uppercase; margin-bottom: 8px; }
+.results-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.share-all-btn {
+  flex-shrink: 0; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: 50%;
+  color: var(--text-dim); cursor: pointer; transition: all 0.2s; margin-top: 2px;
+}
+.share-all-btn:hover { color: var(--brass-light); border-color: var(--border-hover); }
 .results-h2 { font-family: var(--sans); font-size: 1.5rem; font-weight: 600; color: var(--champagne); letter-spacing: -0.015em; margin-bottom: 6px; }
 .results-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 26px; }
 
@@ -387,6 +394,19 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   font-size: 9px; font-weight: 700; letter-spacing: 0.18em; color: var(--brass);
   text-transform: uppercase; margin-bottom: 10px;
 }
+.stretch-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.18em; color: var(--bordeaux-light);
+  text-transform: uppercase; margin-bottom: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.stretch-label::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--bordeaux-light);
+}
+.drinking-window {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text-dim); margin-bottom: 10px;
+}
+.drinking-window .icon { color: var(--brass-dim); flex-shrink: 0; }
 .wine-num {
   position: absolute; top: 16px; right: 20px;
   font-family: var(--sans); font-size: 2.2rem; font-weight: 700;
@@ -1042,9 +1062,16 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
   <!-- Results -->
   <div class="results" id="results">
-    <div class="results-eyebrow" id="resultsEyebrow">The verdict</div>
-    <h2 class="results-h2" id="resultsH2">A few I'd happily drink</h2>
-    <p class="results-meta" id="resultsMeta"></p>
+    <div class="results-header-row">
+      <div>
+        <div class="results-eyebrow" id="resultsEyebrow">The verdict</div>
+        <h2 class="results-h2" id="resultsH2">A few I'd happily drink</h2>
+        <p class="results-meta" id="resultsMeta"></p>
+      </div>
+      <button class="share-all-btn" onclick="shareAllResults()" aria-label="Share these picks">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.7 15.7 6.6M8.3 13.3l7.4 4.1"/></svg>
+      </button>
+    </div>
     <div id="wineCards"></div>
     <div class="sommelier-note" id="sommelierNote" style="display:none">
       <div class="sommelier-note-label" id="sommelierNoteLabel">One more thing</div>
@@ -1978,6 +2005,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       "style": "Brief style descriptor",
       "color": "red, white, rosé, sparkling, or dessert",
       "profile": { "sweetness": 1, "acidity": 3, "tannin": 1, "alcohol": 3, "body": 3, "oak": 1, "intensity": 3 },
+      "drinking_window": "Short honest phrase on whether it's ready now, e.g. 'Ready to drink now', 'Could cellar another 5+ years', 'Past its best, drink soon', 'Too young — hold a few years yet'",
       "description": "Two to three sentences on character, flavour profile, and typical drinking window",
       "why": "${notes ? 'A direct answer to what was asked, or a serving/pairing suggestion if not fully answerable' : 'A serving or pairing suggestion for this wine'}${personal.used ? ', factoring in whether this matches their known taste profile and rating history' : ''}"
     }
@@ -1987,7 +2015,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
   "sommelier_note": "Note the confidence of the identification if the label was unclear or partially obscured, otherwise a brief general remark."
 }
 
-For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is a best guess, and 1 is not sure. For "profile", score on a 1-5 Court of Master Sommeliers deductive-tasting scale (1 low/none, 5 high/pronounced) for sweetness, acidity, tannin (use 1 for whites/sparkling), alcohol, body, oak, and flavour intensity — be specific rather than defaulting to the middle.`
+For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is a best guess, and 1 is not sure. For "profile", score on a 1-5 Court of Master Sommeliers deductive-tasting scale (1 low/none, 5 high/pronounced) for sweetness, acidity, tannin (use 1 for whites/sparkling), alcohol, body, oak, and flavour intensity — be specific rather than defaulting to the middle. Base "drinking_window" on the actual vintage and typical ageing curve for that style of wine — be honest if it's likely past its peak rather than defaulting to "ready to drink" for everything.`
       }
     ];
 
@@ -2245,6 +2273,8 @@ ${wantsGlass ? `The person specifically wants a by-the-glass recommendation. Man
 
 For every wine, report the exact serving size or format as printed next to its price on the list (for example "750ml", "125ml", "150ml", or just "bottle" if no size is printed) in the "serving_size" field, so it's clear exactly which listing you used.
 
+${personal.used ? `Of the wines you recommend, make exactly one of them a deliberate "stretch pick" — something genuinely outside their usual comfort zone (a different grape, region, or style than what they've rated highly before), but still high quality and worth trying. Set "is_stretch": true on that one recommendation only, and use its "why" to explain what makes it a stretch and why it's worth the leap anyway. Every other recommendation should closely match their known preferences as usual. If the list is too limited to responsibly offer a stretch pick without sacrificing quality, it's fine to skip this and set "is_stretch": false on all of them — never force a bad stretch pick just to include one.` : ''}
+
 Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
 {
   "recommendations": [
@@ -2257,6 +2287,8 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       "style": "Brief style descriptor",
       "color": "red, white, rosé, sparkling, or dessert",
       "profile": { "sweetness": 1, "acidity": 3, "tannin": 1, "alcohol": 3, "body": 3, "oak": 1, "intensity": 3 },
+      "drinking_window": "Short honest phrase based on the vintage shown on the list, e.g. 'Ready to drink now', 'Could cellar another 5+ years', 'Past its best, drink soon', 'Too young — hold a few years yet'. If no vintage is shown or it's clearly a current young release, say 'Ready to drink now'.",${personal.used ? `
+      "is_stretch": true or false,` : ''}
       "description": "Two to three sentences on character, flavour profile, and when to drink it",
       "why": "One or two sentences of first-person reasoning for why this suits what was asked. Present tense, opinionated, no more than two sentences.${personal.used ? ' If this pick connects to a wine they have loved before or fits their taste profile, say so briefly.' : ''}"
     }
@@ -2279,6 +2311,8 @@ ${prefs}${personal.text}
 
 Since there is no specific list to read from, "price" should be a realistic typical retail or restaurant price for that wine in AUD, clearly an estimate.
 
+${personal.used ? `Of the wines you recommend, make exactly one of them a deliberate "stretch pick" — something genuinely outside their usual comfort zone (a different grape, region, or style than what they've rated highly before), but still high quality and worth trying. Set "is_stretch": true on that one recommendation only, and use its "why" to explain what makes it a stretch and why it's worth the leap anyway. Every other recommendation should closely match their known preferences as usual.` : ''}
+
 Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
 {
   "recommendations": [
@@ -2290,6 +2324,8 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       "style": "Brief style descriptor",
       "color": "red, white, rosé, sparkling, or dessert",
       "profile": { "sweetness": 1, "acidity": 3, "tannin": 1, "alcohol": 3, "body": 3, "oak": 1, "intensity": 3 },
+      "drinking_window": "Short honest phrase based on the vintage (if any) and typical ageing curve for that style, e.g. 'Ready to drink now', 'Could cellar another 5+ years', 'Best enjoyed young'. Most current-release recommendations should simply say 'Ready to drink now'.",${personal.used ? `
+      "is_stretch": true or false,` : ''}
       "description": "Two to three sentences on character, flavour profile, and when to drink it",
       "why": "One or two sentences of first-person reasoning for why this suits what was asked. Present tense, opinionated, no more than two sentences.${personal.used ? ' If this pick connects to a wine they have loved before or fits their taste profile, say so briefly.' : ''}"
     }
@@ -2480,6 +2516,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
         } else {
           topBlock = `
             ${isHero ? '<div class="hero-label">MY PICK OF THE LIST</div>' : ''}
+            ${wine.is_stretch ? '<div class="stretch-label">A STRETCH — WORTH TRYING</div>' : ''}
             <div class="wine-top">
               <div class="wine-name">${esc(wine.name)}</div>
               ${wine.price ? `<div class="wine-price">${esc(formatPrice(wine.price))}</div>` : ''}
@@ -2498,6 +2535,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
           ${topBlock}
           ${wine.why ? `<p class="wine-why">${esc(wine.why)}</p>` : ''}
           ${wine.description ? `<p class="wine-desc">${esc(wine.description)}</p>` : ''}
+          ${wine.drinking_window ? `<div class="drinking-window"><svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> ${esc(wine.drinking_window)}</div>` : ''}
           <div class="critic-note" id="critic-${i}">
             <div class="critic-note-label">Critic reviews</div>
             <div class="critic-note-loading" id="critic-loading-${i}">
@@ -2726,6 +2764,33 @@ If nothing credible is found for this exact wine, set found to false and leave o
       navigator.share({ title: wine.name, text }).catch(() => {});
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(() => flashSaved(i)).catch(() => {});
+    }
+  }
+
+  function shareAllResults() {
+    const wines = window.currentWines || [];
+    if (!wines.length) return;
+
+    const heading = document.getElementById('resultsH2')?.textContent || "Gatsby's Wine Oracle picks";
+    const lines = wines.map((wine, i) => {
+      const stretchTag = wine.is_stretch ? ' (stretch pick)' : '';
+      const priceText = wine.price ? ` — ${formatPrice(wine.price)}` : '';
+      const whyText = wine.why ? `\n${wine.why}` : '';
+      return `${i + 1}. ${wine.name}${priceText}${stretchTag}${whyText}`;
+    });
+
+    const text = `${heading}\n\n${lines.join('\n\n')}\n\n— Gatsby's Wine Oracle`;
+
+    if (navigator.share) {
+      navigator.share({ title: heading, text }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('.share-all-btn');
+        if (!btn) return;
+        const original = btn.innerHTML;
+        btn.innerHTML = `<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+        setTimeout(() => { btn.innerHTML = original; }, 1800);
+      }).catch(() => {});
     }
   }
 
