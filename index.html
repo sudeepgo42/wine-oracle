@@ -865,6 +865,25 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
               <option value="By the glass">By the glass</option>
             </select>
           </div>
+          <div class="form-group">
+            <label class="form-label">Country</label>
+            <select class="form-control" id="countrySelect">
+              <option value="">Any country</option>
+              <option value="Australia">Australia</option>
+              <option value="New Zealand">New Zealand</option>
+              <option value="France">France</option>
+              <option value="Italy">Italy</option>
+              <option value="Germany">Germany</option>
+              <option value="Austria">Austria</option>
+              <option value="Spain">Spain</option>
+              <option value="Portugal">Portugal</option>
+              <option value="USA">USA</option>
+              <option value="Argentina">Argentina</option>
+              <option value="Chile">Chile</option>
+              <option value="South Africa">South Africa</option>
+              <option value="Other">Other / surprise me</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-group" style="margin-top:16px">
@@ -2151,11 +2170,13 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
     const style = getSelectedStyle();
     const pairing = getSelectedPairing();
     const occasion = document.getElementById('occasionSelect').value;
+    const country = document.getElementById('countrySelect').value;
     const notes = document.getElementById('notesInput').value.trim();
     const personal = await buildPersonalContext();
 
     const hasList = images.length > 0;
-    const hasAnyPreference = !!(style || pairing || occasion || notes);
+    const hasAnyPreference = !!(style || pairing || occasion || country || notes);
+    const wantsGlass = occasion === 'By the glass';
 
     // No list, no stated preference, and nothing known about them yet —
     // there's genuinely nothing to go on. Ask them to fill something in
@@ -2167,15 +2188,20 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
       return;
     }
 
-    const budgetLine = Number(budgetMin) > 0
-      ? `Budget: strictly between $${budgetMin} and $${budget} AUD per bottle. This is a hard constraint, not a preference. Do not recommend anything cheaper than $${budgetMin} or more expensive than $${budget}, even if it would otherwise be a great match.`
-      : `Budget: strictly $${budget} AUD or under per bottle. This is a hard constraint, not a preference — do not recommend anything more expensive than $${budget}, even if it would otherwise be a great match.`;
+    const budgetLine = wantsGlass
+      ? (Number(budgetMin) > 0
+          ? `Budget: strictly between $${budgetMin} and $${budget} AUD per glass pour. This is a hard constraint.`
+          : `Budget: strictly $${budget} AUD or under per glass pour. This is a hard constraint.`)
+      : (Number(budgetMin) > 0
+          ? `Budget: strictly between $${budgetMin} and $${budget} AUD per bottle. This is a hard constraint, not a preference. Do not recommend anything cheaper than $${budgetMin} or more expensive than $${budget}, even if it would otherwise be a great match.`
+          : `Budget: strictly $${budget} AUD or under per bottle. This is a hard constraint, not a preference — do not recommend anything more expensive than $${budget}, even if it would otherwise be a great match.`);
 
     const prefs = [
       budgetLine,
       style && `Style preference: ${style}`,
       pairing && `Food pairing: ${pairing}`,
       occasion && `Occasion: ${occasion}`,
+      country && `Country preference: ${country}${country === 'Other' ? ' (something outside the usual — surprise them)' : ' — only recommend wines actually from this country'}`,
       notes && `Additional notes (may include region): ${notes}`,
     ].filter(Boolean).join('\n');
 
@@ -2215,14 +2241,17 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
 
 ${prefs}${personal.text}
 
-Many wine lists offer wines both by the glass and by the bottle. Only recommend full bottles at or under the stated budget. Do not recommend anything only available by the glass, even if it would otherwise be a strong match — ignore by-the-glass listings entirely and choose from bottles only.
+${wantsGlass ? `The person specifically wants a by-the-glass recommendation. Many wine lists have a dedicated "Wines by the Glass" or "By the Glass" section near the front, usually with a serving size printed in the section header (e.g. "125ml", "150ml", "75ml"). Only recommend from that section, at the glass price shown there — never a full-bottle price from later in the list.` : `Only recommend full bottles, never a glass pour. This matters because many wine lists print the SAME wine twice: once in a "Wines by the Glass" section near the front at a small serving size (typically marked "125ml", "150ml", "75ml" or similar) and a much lower price, and again later in the list as a full bottle at a considerably higher price. If a wine you want to recommend appears in both places, you must use the full-bottle listing and its bottle price — never the by-the-glass listing, even if the glass price fits the budget better. Skip the "Wines by the Glass" section of the list entirely when choosing what to recommend.`}
+
+For every wine, report the exact serving size or format as printed next to its price on the list (for example "750ml", "125ml", "150ml", or just "bottle" if no size is printed) in the "serving_size" field, so it's clear exactly which listing you used.
 
 Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
 {
   "recommendations": [
     {
       "name": "Full wine name as it appears on the list",
-      "price": "Bottle price as listed",
+      "price": "${wantsGlass ? 'Glass price as listed' : 'Bottle price as listed'}",
+      "serving_size": "e.g. '750ml', '125ml', or 'bottle' if no size is printed",
       "region": "Region or appellation",
       "grape": "Primary grape variety or blend",
       "style": "Brief style descriptor",
@@ -2293,9 +2322,26 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       const minNum = Number(budgetMin);
       const maxNum = Number(budget);
       let droppedCount = 0;
+      let droppedForServing = 0;
 
       if (parsed.recommendations && parsed.recommendations.length) {
         const kept = parsed.recommendations.filter(wine => {
+          // Serving-size check: only relevant when they wanted a bottle.
+          // Glass pours are almost always printed as an ml value under 700
+          // (125ml, 150ml, 75ml etc.) — a real 750ml+ bottle either says
+          // "750ml"/"bottle" or has no size printed at all.
+          if (!wantsGlass && wine.serving_size) {
+            const mlMatch = String(wine.serving_size).match(/(\d{2,4})\s*ml/i);
+            if (mlMatch && Number(mlMatch[1]) < 700) {
+              droppedForServing++;
+              return false;
+            }
+            if (/\bglass\b/i.test(String(wine.serving_size))) {
+              droppedForServing++;
+              return false;
+            }
+          }
+
           const priceNum = parsePriceToNumber(wine.price);
           if (priceNum === null) return true; // couldn't parse it — don't punish for that
           const overMax = priceNum > maxNum;
@@ -2309,9 +2355,16 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
         parsed.recommendations = kept;
       }
 
+      const noteParts = [];
       if (droppedCount > 0) {
         const rangeText = minNum > 0 ? `$${minNum}–$${maxNum}` : `$${maxNum} or under`;
-        const droppedNote = `(${droppedCount} suggestion${droppedCount > 1 ? 's' : ''} came back outside your ${rangeText} range and ${droppedCount > 1 ? 'were' : 'was'} left out.)`;
+        noteParts.push(`${droppedCount} suggestion${droppedCount > 1 ? 's' : ''} came back outside your ${rangeText} range and ${droppedCount > 1 ? 'were' : 'was'} left out`);
+      }
+      if (droppedForServing > 0) {
+        noteParts.push(`${droppedForServing} came back as a by-the-glass pour rather than a bottle and ${droppedForServing > 1 ? 'were' : 'was'} left out`);
+      }
+      if (noteParts.length) {
+        const droppedNote = `(${noteParts.join('; ')}.)`;
         parsed.sommelier_note = parsed.sommelier_note ? `${parsed.sommelier_note} ${droppedNote}` : droppedNote;
       }
 
@@ -2324,6 +2377,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       renderResults(parsed, {
         budgetLabel: Number(budgetMin) > 0 ? `Budget $${budgetMin}–$${budget}` : `Budget up to $${budget}`,
         styleLabel: style,
+        countryLabel: country,
         isLabelMode: false,
         personalized: personal.used,
         redGrid: personal.redGrid,
@@ -2388,6 +2442,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
     const metaParts = [];
     if (meta.budgetLabel) metaParts.push(meta.budgetLabel);
     if (meta.styleLabel && !meta.isLabelMode) metaParts.push(meta.styleLabel);
+    if (meta.countryLabel && !meta.isLabelMode) metaParts.push(meta.countryLabel);
     if (meta.personalized) metaParts.push('Personalised to your taste');
     document.getElementById('resultsMeta').textContent = meta.isLabelMode
       ? ['Identified from your photo', meta.personalized ? 'Personalised to your taste' : ''].filter(Boolean).join(' · ')
