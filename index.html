@@ -2341,7 +2341,7 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
         ...fileBlocks,
         {
           type: 'text',
-          text: `The attached file${pageCount > 1 ? 's are' : ' is'} ${descriptor}. Based on the preferences below, recommend 3 to 5 specific wines from this list that best match.
+          text: `The attached file${pageCount > 1 ? 's are' : ' is'} ${descriptor}. Based on the preferences below, recommend 3 to 5 specific wines from this list that best match — aim for 5 where the list genuinely supports it. If, and only if, the list combined with the stated preferences (budget, style, country, or anything else) genuinely doesn't have 3 good matches, it's fine to return fewer — but you must always say so plainly in "sommelier_note" and explain which constraint was the limiting factor, so it's never left unexplained. Never pad the list with a weak match just to reach 3, and never go silent about returning fewer than 3.
 
 ${prefs}${personal.text}
 
@@ -2381,7 +2381,7 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       userContent = [
         {
           type: 'text',
-          text: `The person has no wine list to hand — recommend 3 to 5 real, specific wines they could realistically look for or buy, based on the preferences below. These should be genuine wines that exist (not generic archetypes), ideally ones that are reasonably available, not ultra-rare or allocation-only.
+          text: `The person has no wine list to hand — recommend 3 to 5 real, specific wines they could realistically look for or buy, based on the preferences below — aim for 5 where the preferences genuinely support that many distinct good options. These should be genuine wines that exist (not generic archetypes), ideally ones that are reasonably available, not ultra-rare or allocation-only. If the stated preferences are narrow enough that fewer than 3 genuinely strong, distinct options exist, it's fine to return fewer — but always say so plainly in "sommelier_note" and explain what made it narrow. Never pad the list with a weak option just to reach 3.
 
 ${prefs}${personal.text}
 
