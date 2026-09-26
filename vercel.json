@@ -1,0 +1,6 @@
+{
+  "functions": {
+    "api/sommelier.js": { "maxDuration": 300 },
+    "api/critic.js": { "maxDuration": 300 }
+  }
+}
