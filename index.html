@@ -1681,26 +1681,36 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
   function renderGridSliders(containerId, dimensions, valuesObj, onChangeFnName) {
     const el = document.getElementById(containerId);
-    el.innerHTML = dimensions.map(d => `
+    el.innerHTML = dimensions.map(d => {
+      const pct = ((valuesObj[d.key] - 1) / 4) * 100;
+      return `
       <div class="grid-slider-row">
         <div class="grid-slider-label-row">
           <span class="grid-slider-name">${esc(d.label)}</span>
           <span class="grid-slider-value" id="${containerId}-${d.key}-val">${valuesObj[d.key]}/5</span>
         </div>
         <input type="range" min="1" max="5" step="1" value="${valuesObj[d.key]}"
-          oninput="${onChangeFnName}('${d.key}', this.value, '${containerId}')">
+          style="--pct:${pct}%"
+          oninput="${onChangeFnName}('${d.key}', this, '${containerId}')">
         <div class="grid-slider-ends"><span>${esc(d.low)}</span><span>${esc(d.high)}</span></div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
-  function onRedGridChange(key, value, containerId) {
-    redGridValues[key] = Number(value);
+  function onRedGridChange(key, el, containerId) {
+    const value = Number(el.value);
+    redGridValues[key] = value;
+    const pct = ((value - 1) / 4) * 100;
+    el.style.setProperty('--pct', pct + '%');
     document.getElementById(`${containerId}-${key}-val`).textContent = `${value}/5`;
   }
 
-  function onWhiteGridChange(key, value, containerId) {
-    whiteGridValues[key] = Number(value);
+  function onWhiteGridChange(key, el, containerId) {
+    const value = Number(el.value);
+    whiteGridValues[key] = value;
+    const pct = ((value - 1) / 4) * 100;
+    el.style.setProperty('--pct', pct + '%');
     document.getElementById(`${containerId}-${key}-val`).textContent = `${value}/5`;
   }
 
@@ -2096,10 +2106,21 @@ For "confidence", use an integer 1-4 where 4 is certain, 3 is fairly sure, 2 is 
       }
 
       const data = await res.json();
+
+      if (data.stop_reason === 'max_tokens') {
+        throw new Error("The response got cut off partway through. Please try again — this is usually a one-off.");
+      }
+
       const raw = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
       const match = raw.match(/\{[\s\S]*\}/);
       if (!match) throw new Error('Could not read the response. Please try again.');
-      const parsed = JSON.parse(match[0]);
+
+      let parsed;
+      try {
+        parsed = JSON.parse(match[0]);
+      } catch (parseErr) {
+        throw new Error("Couldn't read the response properly. Please try again.");
+      }
 
       document.getElementById('resultsEyebrow').textContent = 'From the label';
       document.getElementById('resultsH2').textContent = "I know this one";
@@ -2404,10 +2425,21 @@ Respond ONLY with a valid JSON object. No markdown, no code fences, no preamble:
       }
 
       const data = await res.json();
+
+      if (data.stop_reason === 'max_tokens') {
+        throw new Error("The response got cut off partway through — usually means a lot came back at once. Please try again, or narrow it down (fewer pages, or a tighter budget range).");
+      }
+
       const raw = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
       const match = raw.match(/\{[\s\S]*\}/);
       if (!match) throw new Error('Could not read the response. Please try again.');
-      const parsed = JSON.parse(match[0]);
+
+      let parsed;
+      try {
+        parsed = JSON.parse(match[0]);
+      } catch (parseErr) {
+        throw new Error("Couldn't read the response properly. Please try again.");
+      }
 
       // Safety net: enforce the budget ourselves, in case the model didn't.
       const minNum = Number(budgetMin);
