@@ -1,0 +1,20 @@
+{
+  "name": "wine-oracle",
+  "version": "1.0.0",
+  "description": "Gatsby's Wine Oracle - Hand me the list. I'll tell you what to drink.",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "wine",
+    "pwa",
+    "oracle"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
