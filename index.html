@@ -735,6 +735,21 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
   </div>
 </div>
 
+<!-- Guards against Outlook/corporate Safe Links pre-scanning and consuming the one-time email link -->
+<div class="login-gate" id="prefetchGuardGate" style="display:none">
+  <div class="login-card">
+    <div class="seal-wrap">
+      <svg viewBox="0 0 100 100" width="70" height="70"><defs><radialGradient id="waxF" cx="36%" cy="26%" r="82%"><stop offset="0%" stop-color="#e04a52"/><stop offset="46%" stop-color="#b9283a"/><stop offset="100%" stop-color="#7a1624"/></radialGradient></defs><path d="M50,4 C63,4 73,11 79,19 C85,27 95,33 94,46 C93,58 87,63 85,72 C83,83 70,96 57,95 C46,94 39,97 29,91 C19,85 9,77 6,63 C3,49 3,39 12,27 C21,15 37,4 50,4 Z" fill="url(#waxF)"/><circle cx="50" cy="50" r="35" fill="none" stroke="rgba(46,4,12,.55)" stroke-width="1.6"/><text x="50" y="64.6" text-anchor="middle" fill="rgba(255,220,212,.45)" font-family="'Great Vibes', cursive" font-weight="400" font-size="52">G</text><text x="50" y="66" text-anchor="middle" fill="#37060f" font-family="'Great Vibes', cursive" font-weight="400" font-size="52">G</text></svg>
+    </div>
+    <h1>Tap to <em>Sign In</em></h1>
+    <p>Some email apps (Outlook in particular) automatically scan links before you open them. Tapping the button below completes your sign-in safely — the automatic scan can't do this part for you.</p>
+    <div class="login-form">
+      <button class="btn-primary" id="prefetchGuardBtn" onclick="continuePastPrefetchGuard()">Continue Sign In</button>
+      <div class="login-error" id="prefetchGuardError"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Logout -->
 <button class="settings-gear-btn" id="settingsGearBtn" style="display:none" onclick="showSettings()" aria-label="Settings">
   <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1515,7 +1530,47 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     });
   }
 
-  initAuth();
+  // --- Guard against email link scanners (Outlook Safe Links etc.) ---
+  // Some corporate/email-client security features auto-visit every link in
+  // an incoming email to scan it, which silently consumes a one-time
+  // Supabase confirmation link before the real person ever taps it. The
+  // fix (per Supabase's own docs) is to route the email link through our
+  // own site first, behind an explicit button tap, so the scanner only
+  // ever touches this harmless page — the real link is only followed on
+  // a genuine user click.
+  function checkPrefetchGuard() {
+    if (!location.hash.startsWith('#confirm=')) return false;
+
+    const realUrl = location.hash.slice('#confirm='.length);
+    if (!realUrl) return false;
+
+    window._guardedConfirmationUrl = realUrl;
+    document.getElementById('loginGate').style.display = 'none';
+    document.getElementById('magicLandedGate').style.display = 'none';
+    document.getElementById('appWrap').style.display = 'none';
+    document.getElementById('prefetchGuardGate').style.display = 'flex';
+    return true;
+  }
+
+  function continuePastPrefetchGuard() {
+    const url = window._guardedConfirmationUrl;
+    const errorEl = document.getElementById('prefetchGuardError');
+    if (!url) {
+      errorEl.textContent = 'Something went wrong reading that link. Please request a new sign-in email.';
+      errorEl.classList.add('show');
+      return;
+    }
+    try {
+      window.location.href = decodeURIComponent(url);
+    } catch (e) {
+      window.location.href = url;
+    }
+  }
+
+  const skippedInitialAuth = checkPrefetchGuard();
+  if (!skippedInitialAuth) {
+    initAuth();
+  }
 
   let images = [];
 
